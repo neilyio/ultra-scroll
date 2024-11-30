@@ -248,16 +248,17 @@ across jumbo lines:
   directly identify the final line (both via `pos-at-x-y`) and adjust
   from there.
 - Display bugs
-  - There are [display
+  - There were several [display
     bugs](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533) with
     inline images that cause them to misreport pixel measurements and
     positions sometimes.
   - These lead to slightly staccato scrolling in such buffers and
     `height=0` gets erroneously reported, so can't be used to find
-    beginning of buffer. Best to guard against these.
+    beginning of buffer.
   - **Update:** Two display bugs have been fixed in master as of Dec,
     2023, so scrolling with lots of inline images will soon be even
     smoother.
+  - A [related display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) with visual motion in buffers using `visual-line-mode` with many images unfortunately remains, which may (slightly) impact smooth scrolling in such buffers.
 
 So all in all, quite complicated to get something that works as you'd
 hope. The cutting room floor is littered with literally dozens of
