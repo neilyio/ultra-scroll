@@ -63,7 +63,7 @@ Just start scrolling :).
 
 > [!TIP]
 > For best performance, use a build with native-compilation (see
-> [Speed](id:E5E845A0-E4EE-4F73-9840-C98040007537)).
+> [Speed](#Speed)).
 
 ## Configuration
 
@@ -142,7 +142,7 @@ On the `emacs-mac` build, there is no comparison, because
 `pixel-scroll-precision-mode` doesn't work there. On other builds, they
 are fairly comparable. Compared to `pixel-scroll-precision-mode`,
 `ultra-scroll` obviously works with `emacs-mac`, but is also even
-[faster](id:E5E845A0-E4EE-4F73-9840-C98040007537), and can cleanly
+[faster](#Speed), and can cleanly
 scroll past images taller than the window.
 
 In addition to fast scrolling, the built-in
