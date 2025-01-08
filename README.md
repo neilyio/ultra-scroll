@@ -259,7 +259,7 @@ across jumbo lines:
     positions sometimes.
   - These lead to slightly staccato scrolling in such buffers and
     `height=0` gets erroneously reported, so can't be used to find
-    beginning of buffer. Best to guard against these.
+    beginning of buffer.
   - **Update:** Two display bugs have been fixed in master as of Dec,
     2023, so scrolling with lots of inline images will soon be even
     smoother. [One
