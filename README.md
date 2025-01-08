@@ -22,15 +22,15 @@ even with dumb third party mice.
 > If you don't scroll with a high-speed device (modern mouse or
 > track-pad), no. If you do, but aren't sure, here's a good test to try:
 >
-> Open a big, heavy-duty emacs buffer, full screen on your largest
-> monitor. While scrolling smoothly such that lines would move across
-> your window's full height in about 5 seconds, *can you easily read the
-> content you see*, without stopping? Is the text as clear scrolling
-> down as it is up? Now, try this exercise again with your browser – I
-> bet it's *very* readable there. Shouldn't emacs be like this?
+> Open a heavy emacs buffer full screen on your largest monitor. While
+> scrolling smoothly such that lines would move across your window's
+> full height in about 5 seconds, *can you easily read the text you
+> see*, without stopping, in both directions? Now, try this exercise
+> again with your browser – I bet it's *very* readable there. Shouldn't
+> emacs be like this?
 >
-> If you scroll buffers with large images, this is also a good reason to
-> give `ultra-scroll` a try.
+> If you scroll buffers with tall images visible, this is also a good
+> reason to give `ultra-scroll` a try.
 
 ## Compatibility, Installation, and Usage
 
@@ -60,6 +60,10 @@ move to the final paren, and `C-x C-e`. Installation is then simple:
 ### Usage
 
 Just start scrolling :).
+
+> [!TIP]
+> For best performance, use a build with native-compilation (see
+> [Speed](id:E5E845A0-E4EE-4F73-9840-C98040007537)).
 
 ## Configuration
 
