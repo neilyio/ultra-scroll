@@ -77,6 +77,13 @@ Just start scrolling :).
 > For best performance, use a build with native-compilation (see
 > [Speed](#Speed)).
 
+### Troubleshooting
+
+If it doesn't seem to do anything for you, please run
+`M-x ultra-scroll-check`. If this command reports pixel data are
+`MISSING`, `ultra-scroll` won't do much for you. Look into getting
+hardware/system support for `PIXEL-DELTA` scrolling event information.
+
 ## Configuration
 
 There is little to no configuration. If desired for use with dumb mice

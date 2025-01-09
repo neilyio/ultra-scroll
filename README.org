@@ -56,6 +56,10 @@ Just start scrolling :).
 For best performance, use a build with native-compilation (see [[#Speed][Speed]]).
 #+end_tip
 
+*** Troubleshooting
+
+If it doesn't seem to do anything for you, please run ~M-x ultra-scroll-check~.  If this command reports pixel data are =MISSING=, ~ultra-scroll~ won't do much for you.  Look into getting hardware/system support for ~PIXEL-DELTA~ scrolling event information.
+
 ** Configuration
 
 There is little to no configuration.  If desired for use with dumb mice on ~emacs-mac~, the variable ~ultra-scroll-mac-multiplier~ can be set to a number smaller or larger than ~1.0~ to decrease/increase mouse-wheel scrolling speed.  Note that many fancier wheeled mice have drivers that /simulate/ track-pads, so this variable will have no effect on them.  For these, and for track-pads generally, scrolling speed should be configured in system settings.
