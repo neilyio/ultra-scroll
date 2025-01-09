@@ -50,7 +50,7 @@ regular mouse wheels by the value returned by
 such mice.  Note that some mice drivers emulate trackpads, and so
 will not be affected by this setting.  Adjust scrolling speed
 directly with those drivers instead."
-  :group 'mouse
+  :group 'scrolling
   :type 'float)
 
 (defcustom ultra-scroll-gc-percentage 0.67
@@ -58,13 +58,13 @@ directly with those drivers instead."
 This is set on initial scrolling, and restored during idle
 time (see `ultra-scroll-gc-idle-time')."
   :type '(choice (const :tag "Disable" nil) float)
-  :group 'mouse)
+  :group 'scrolling)
 
 (defcustom ultra-scroll-gc-idle-time 0.5
   "Idle time in sec after which to restore `gc-cons-percentage'.
 Operates only if `ultra-scroll-gc-percentage' is non-nil."
   :type 'float
-  :group 'mouse)
+  :group 'scrolling)
 
 ;;;; Event callback/scroll
 (defun ultra-scroll-down (delta)
@@ -277,7 +277,7 @@ full mac trackpad capabilities (and simulating them for regular
 mouse).  Makes use of the underlying pixel-scrolling capabilities
 of `ultra-scroll-mode', which see."
   :global t
-  :group 'mouse
+  :group 'scrolling
   :keymap pixel-scroll-precision-mode-map ; reuse
   (cond
    (ultra-scroll-mode
