@@ -89,19 +89,45 @@ hardware/system support for `PIXEL-DELTA` scrolling event information.
 
 ## Configuration
 
-There is little to no configuration. If desired for use with dumb mice
-on `emacs-mac`, the variable `ultra-scroll-mac-multiplier` can be set to
-a number smaller or larger than `1.0` to decrease/increase mouse-wheel
-scrolling speed. Note that many fancier wheeled mice have drivers that
-*simulate* track-pads, so this variable will have no effect on them. For
-these, and for track-pads generally, scrolling speed should be
-configured in system settings.
+There is little to no configuration.
+
+### Altering dumb mice behavior on emacs-mac
+
+If desired for use with dumb mice on `emacs-mac`, the variable
+`ultra-scroll-mac-multiplier` can be set to a number smaller or larger
+than `1.0` to decrease/increase mouse-wheel scrolling speed. Note that
+many fancier wheeled mice have drivers that *simulate* track-pads, so
+this variable will have no effect on them. For these, and for track-pads
+generally, scrolling speed should be configured in system settings.
+
+> [!NOTE]
+> Only certain systems provide pixel scroll offset (`PIXEL-DELTA`) for
+> older/wheeled mice. Use `M-x ultra-scroll-check` to see if yours does.
+> If not, it's recommended to stick with `pixel-scroll-precision-mode`.
+
+### Mitigating garbage collection pauses
 
 To reduce the likelihood of garbage collection during scroll, which can
 introduce slight pauses, the value of `gc-cons-percentage` is
 temporarily increased, and reset during idle time. The defaults should
 work well for most situations, but if necessary, can be configured using
 `ultra-scroll-gc-percentage` and `ultra-scroll-gc-idle-time`.
+
+### pixel-scroll inter-operation
+
+By design, `ultra-scroll` simply uses the in-built
+`pixel-scroll-precision-mode-map`, remapping the scrolling functions
+there with its own. The latter also has the capability of *faking*
+smooth scrolling using interpolation, e.g. for `scroll-up/down-command`.
+Simply set the relevant variables, like
+`pixel-scroll-precision-interpolate-page`, and they should "just work".
+
+> [!IMPORTANT]
+> Unlike `pixel-scroll-precision-mode-map`, `ultra-scroll` does not
+> support "faking" smooth pixel-level scrolling for mouse wheel movement
+> on systems that do not provide this data. You can determine if yours
+> does with `M-x ultra-scroll-check`. If not, it's recommended to stick
+> with `pixel-scroll-precision-mode`.
 
 ## Related packages and functionality
 
