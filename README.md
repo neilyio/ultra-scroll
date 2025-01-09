@@ -34,9 +34,19 @@ even with dumb third party mice.
 
 ## Compatibility, Installation, and Usage
 
+### Compatibility
+
 `ultra-scroll` should work across all systems that provide pixel
-scrolling information; see the `PIXEL-DELTA` field of `wheel-up/down`
-events.
+scrolling information for your hardware; see the `PIXEL-DELTA` field of
+`wheel-up/down` events.
+
+> [!NOTE]
+> If your mouse and/or system do not provide pixel scrolling data,
+> `ultra-scroll` falls back to line-by-line scrolling. To check, run
+> `M-x ultra-scroll-check`, scroll your mouse or track-pad, and examine
+> the message in the `*Warnings*` buffer. If it reports `MISSING` pixel
+> scroll data, consider using `pixel-scroll-precision-mode` with
+> `pixel-scroll-precision-interpolate-mice` instead.
 
 ### Installation
 

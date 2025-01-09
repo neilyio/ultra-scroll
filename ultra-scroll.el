@@ -246,6 +246,28 @@ will be replayed for left/right touch ends."
 (put 'ultra-scroll 'scroll-command t)
 (put 'ultra-scroll-mac 'scroll-command t)
 
+(defun ultra-scroll-check ()
+  "Check and report on the scrolling event data your system provides."
+  (interactive)
+  (message "ultra-scroll: checking scroll data  -- scroll your mouse wheel or track-pad!")
+  (let* ((nc (string-match "\\bNATIVE_COMP\\b" system-configuration-features))
+	 ev)
+    (while (and (setq ev (read-event))
+		(not (memq (event-basic-type ev)
+			   '(wheel-up wheel-down)))))
+    (display-warning
+     :debug
+     (format "ultra-scroll-check: %s detected, found %s pixel scroll data%s"
+	     (event-basic-type ev)
+	     (if (featurep 'mac-win)
+		 (let ((plist (nth 3 ev)))
+		   (cond ((null plist) "NO")
+			 ((plist-get plist :scrolling-delta-y) "FULL")
+			 ((plist-get plist :delta-y) "BASIC")
+			 (t "MISSING")))
+	       (if (nth 4 ev) "FULL" "MISSING"))
+	     (if nc "" " [NO NATIVE COMPILATION!]")))))
+
 ;;;; Mode
 ;;;###autoload
 (define-minor-mode ultra-scroll-mode
