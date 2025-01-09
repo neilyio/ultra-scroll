@@ -324,20 +324,28 @@ right in my usage.
 ## Speed
 
 I often wonder how many people who claim "emacs is laggy" form that
-impression from scrolling. `ultra-scroll` is fast by design. I made some
-observations about its speed using `ELP` to measure the average call
-duration of individual scroll functions (`ultra-scroll-up/down`) with
-various buffer and window sizes. Take-aways:
+impression from scrolling. Scrolling at 60Hz or faster with modern mice
+and track-pads puts a lot of stress on systems, and is often the first
+place lag appears.
 
-1.  Very large window sizes and buffers with "extra" processing like
-    treesitter, elaborate font-locking, many overlays, etc. slow down
-    scrolling.
+`ultra-scroll` is fast *by design*. I made some observations about its
+speed using `ELP` to measure the average call duration of individual
+scroll functions (`ultra-scroll-up/down`) with various buffer and window
+sizes[^2].
+
+### Take-aways
+
+1.  Very large window sizes and buffers with "extra" processing going
+    on, like treesitter, LSP modes, elaborate font-locking, tons
+    overlays, etc. can slow down scrolling.
 2.  If the scroll command does its work in \<10ms, you do not notice it.
     You can definitely start feeling it when scroll commands take more
     than 15ms.
-3.  The underlying scroll primitives need to leave some overhead in time
-    for all the other emacs commands that occur when new content is
-    brought into view (font-lock), so faster is better.
+3.  The underlying scroll primitives need to leave substantial overhead
+    in time, so that all the other emacs commands that occur when new
+    content is brought into view (font-lock) can run without causing
+    scroll lag, for all your different modes. **Faster is better**: 3ms
+    or less would be *ideal*.
 4.  Building `--with-native-comp` is *essential* for ultra-smooth
     scrolling. It increases the speed of each individual scroll commands
     by **\>3x**, which is important since these commands are called so
@@ -345,9 +353,25 @@ various buffer and window sizes. Take-aways:
 5.  On the same build (NS, v29.4, with native-comp), `ultra-scroll` is
     about **40% faster** than `pixel-scroll-precision-mode`. Except on
     slower machines, or in very heavy buffers and/or on large window
-    sizes, this shouldn't be too noticeable.
+    sizes where your performance is right on the edge, this shouldn't be
+    too noticeable.
 6.  On the same system (an M2 mac), `ultra-scroll` on `emacs-mac` is
     10-15% faster than on NS builds like `emacs-plus`. Very likely not
     noticeable.
+7.  The mode-line gets updated *very often* during smooth scrolls (and
+    in general), and poorly written fancy modeline add-ons are a common
+    source of slow-down. Good modeline modes will *rate-limit* their
+    updates behind timers and/or cache results in local/global
+    variables. If your scrolling (or any other aspect of Emacs) "lags",
+    try `(setq mode-line-format "NADA")` and see if that solves it. If
+    so, suspect your fancy modeline.
 
 [^1]: Formerly `ultra-scroll-mac`.
+
+[^2]: To try this yourself, `M-x elp-instrument-function` on both
+    `ultra-scroll-up/down`, scroll around (both directions) in a big
+    buffer with a large window, then `M-x elp-results`. The last column
+    gives average time in seconds. Less than 0.003s (i.e. 3ms) is ideal,
+    8ms is still perfectly usable, 15ms you'll feel a bit, 50ms will be
+    very frustrating. `scroll-down` is always faster than `scroll-up`
+    due to an asymmetry in Emacs' `vscroll` buffer.
