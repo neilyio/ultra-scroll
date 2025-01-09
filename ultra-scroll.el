@@ -164,7 +164,6 @@ DELTA should be less than the window's height."
 	  ((beginning-of-buffer end-of-buffer)
 	   (let* ((end (eq (car err) 'end-of-buffer))
 		  (p (if end (point-max) (point-min))))
-	     ;; (debug)
 	     (goto-char p)
 	     (set-window-start window p)
 	     (set-window-vscroll window 0 t t)
@@ -186,8 +185,8 @@ occurs and the `gc-cons-percentage' level to set temporarily."
 
 (defun ultra-scroll (event &optional arg)
   "Smooth scroll EVENT.
-EVENT and optional ARG is passed to `mwheel-scroll' unless a
-scrolling event."
+EVENT and optional ARG are passed to `mwheel-scroll', unless
+EVENT is a scrolling event."
   (interactive "e")
   (let ((delta (nth 4 event)))
     (if (not delta)
