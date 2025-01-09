@@ -271,11 +271,19 @@ will be replayed for left/right touch ends."
 ;;;; Mode
 ;;;###autoload
 (define-minor-mode ultra-scroll-mode
-  "Toggle pixel precision scrolling for mac.
+  "Toggle pixel precision scrolling.
 When enabled, this minor mode scrolls the display precisely using
-full mac trackpad capabilities (and simulating them for regular
-mouse).  Makes use of the underlying pixel-scrolling capabilities
-of `ultra-scroll-mode', which see."
+full trackpad or modern mouse capabilities.  It correctly scrolls
+past images taller than the window height.  The mode enables
+`pixel-scroll-precision-mode-map', overriding that mode's scroll
+command, but other mode features, including interpolated page
+scrolling, still function (if enabled).
+
+Note that `ultra-scroll' does NOT do any interpolation of scroll
+wheel data, and is intended for use with mouse/trackpad hardware
+on systems providing pixel-level scroll data; see
+`ultra-scroll-check' to investigate what kind of scrolling data
+your system and hardware provide."
   :global t
   :group 'scrolling
   :keymap pixel-scroll-precision-mode-map ; reuse
