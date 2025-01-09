@@ -86,7 +86,7 @@ On the ~emacs-mac~ build, there is no comparison, because ~pixel-scroll-precisio
 
 In addition to fast scrolling, the built-in ~pixel-scroll-precision-mode~ (new in Emacs v29.1) can simulate a /feature-complete track-pad driver/ in elisp for older mice which do not supply pixel scroll information.  This comes complete with elisp-based scroll interpolation, a timer-based /momentum/ phase, etc.
 
-*** Why are there so many smooth scrolling modes?  Why is this so hard?  It's just /scrolling//...
+*** Why are there so many smooth scrolling modes?  Why is this so hard?  It's just /scrolling/...
 
 Emacs was designed long before mice were common, not to mention modern high-resolution track-pads which send rapid micro-updates ("move up one pixel!") more than 60 times per second.  Unlike other programs, Emacs insists on keeping the cursor (point) visible at all times.  Deep in its re-display code, Emacs tracks where point is, and works diligently to ensure it never falls outside the visible window.  It does this not by moving point (that's the user's job), but by moving the /window/ (visible range of lines) surrounding point.
 

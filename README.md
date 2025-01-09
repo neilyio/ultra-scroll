@@ -153,7 +153,7 @@ In addition to fast scrolling, the built-in
 supply pixel scroll information. This comes complete with elisp-based
 scroll interpolation, a timer-based *momentum* phase, etc.
 
-### Why are there so many smooth scrolling modes? Why is this so hard? It's just *scrolling/*…
+### Why are there so many smooth scrolling modes? Why is this so hard? It's just *scrolling*…
 
 Emacs was designed long before mice were common, not to mention modern
 high-resolution track-pads which send rapid micro-updates ("move up one
@@ -261,7 +261,7 @@ across jumbo lines:
     positions sometimes.
   - These lead to slightly staccato scrolling in such buffers and
     `height=0` gets erroneously reported, so can't be used to find
-    beginning of buffer.
+    beginning of buffer. Best to guard against these.
   - **Update:** Two display bugs have been fixed in master as of Dec,
     2023, so scrolling with lots of inline images will soon be even
     smoother. [One
