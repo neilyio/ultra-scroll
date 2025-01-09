@@ -113,7 +113,7 @@ For posterity, some things I discovered in my own mostly-victorious battle again
 - Virtual Scroll:
   + ~vscroll~ -- a virtual rendered scrolling window hiding /below/ the current window -- is key to smooth scrolling, and altering ~vscroll~ to move the view-port is incredibly fast.
   + There is plenty of ~vscroll~ room available, including the entirety of any tall lines (as for displayed images) in view.
-  + ~vscroll~ can sometimes place the point off the visible window (I know, sacrilege), but more often triggers rec-entering.
+  + ~vscroll~ can sometimes place the point off the visible window (I know, sacrilege), but more often triggers re-centering.
 - Scrolling asymmetry:
   + Sadly ~vscroll~ is purely /one-sided/: you can only access a ~vscroll~ area /beneath/ the current window view; /there is no negative ~vscroll~/.
   + Unlike ~window-start~, ~window-end~ does not get updated promptly between re-displays and cannot always be trusted. Computing it is expensive, so should be avoided during re-display.

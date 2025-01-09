@@ -210,7 +210,7 @@ across jumbo lines:
   - There is plenty of `vscroll` room available, including the entirety
     of any tall lines (as for displayed images) in view.
   - `vscroll` can sometimes place the point off the visible window (I
-    know, sacrilege), but more often triggers rec-entering.
+    know, sacrilege), but more often triggers re-centering.
 - Scrolling asymmetry:
   - Sadly `vscroll` is purely *one-sided*: you can only access a
     `vscroll` area *beneath* the current window view; *there is no
