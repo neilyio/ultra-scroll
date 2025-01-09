@@ -16,6 +16,9 @@ images and other jumbo lines – a perennial problem with scrolling
 packages to date. As a bonus, it enables relatively smooth scrolling
 even with dumb third party mice.
 
+Note, the `previous-buffer` animation above is from two-finger track-pad
+swiping, and is an `emacs-mac` exclusive.
+
 > [!NOTE]
 > **Do you need this?**
 >
