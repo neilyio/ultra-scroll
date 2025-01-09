@@ -143,12 +143,14 @@ So all in all, it's quite complicated to get something that works as you'd hope.
 :ID:       E5E845A0-E4EE-4F73-9840-C98040007537
 :END:
 
-Some observations about the speed of ~ultra-scroll~.  I used ~ELP~ to measure the average call duration of individual scroll functions (~ultra-scroll-up/down~) with various buffer and window sizes. Take aways:
+I often wonder how many people who claim "emacs is laggy" form that impression from scrolling.   ~ultra-scroll~ is fast by design.  I made some observations about its speed using ~ELP~ to measure the average call duration of individual scroll functions (~ultra-scroll-up/down~) with various buffer and window sizes. Take-aways:
 
-1. You can definitely start feeling it when scroll commands take more than 15ms.  These need to leave time for other emacs commands that occur when new content is brought into view (font-lock), so faster is better.
-2. Building ~--with-native-comp~ is /essential/ for ultra-smooth scrolling.  It increases the speed of each individual scroll command by *>3x*, which is important since these commands are called so frequently.
-3. On the same build (NS, v29.4, with native-comp), ~ultra-scroll~ is about *40% faster* than ~pixel-scroll-precision-mode~.  Except on slower machines, or in very heavy buffers and/or on large window sizes, this shouldn't be too noticeable.
-4. On the same system (an M2 mac), ~ultra-scroll~ on ~emacs-mac~ is 10-15% faster than on NS builds like ~emacs-plus~.  Very likely not noticeable. 
+1. Very large window sizes and buffers with "extra" processing like treesitter, elaborate font-locking, many overlays, etc. slow down scrolling.
+2. If the scroll command does its work in <10ms, you do not notice it.  You can definitely start feeling it when scroll commands take more than 15ms.
+3. The underlying scroll primitives need to leave some overhead in time for all the other emacs commands that occur when new content is brought into view (font-lock), so faster is better.
+4. Building ~--with-native-comp~ is /essential/ for ultra-smooth scrolling.  It increases the speed of each individual scroll commands by *>3x*, which is important since these commands are called so frequently.
+5. On the same build (NS, v29.4, with native-comp), ~ultra-scroll~ is about *40% faster* than ~pixel-scroll-precision-mode~.  Except on slower machines, or in very heavy buffers and/or on large window sizes, this shouldn't be too noticeable.
+6. On the same system (an M2 mac), ~ultra-scroll~ on ~emacs-mac~ is 10-15% faster than on NS builds like ~emacs-plus~.  Very likely not noticeable. 
 
 * Footnotes
 
