@@ -322,6 +322,8 @@ your system and hardware provide."
       (warn "ultra-scroll: scroll-conservatively > 0 is required for smooth scrolling of large images; 101 recommended"))
     (unless (= scroll-margin 0)
       (warn "ultra-scroll: scroll-margin = 0 is required for glitch-free smooth scrolling"))
+    (when (and (featurep 'x) (not (featurep 'xinput2)))
+      (warn "ultra-scroll: Emacs on Linux/X11 must be compiled --with-xinput2"))
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision]
 		(if (featurep 'mac-win) #'ultra-scroll-mac #'ultra-scroll))
     (setf (get 'pixel-scroll-precision-use-momentum 'us-orig-value)
