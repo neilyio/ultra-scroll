@@ -290,13 +290,14 @@ PIXEL-DELTA values to see if they differ."
       (when (and (featurep 'x) (not (featurep 'xinput2)))
 	(insert " *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
       (insert (format " *** %s scroll events detected%s\n" cnt (if mac-basic " [Mac basic mouse]" "")))
-      (if (cl-every (lambda (x) (= x (car deltas))) deltas)
+      (if (cl-every (lambda (x) (= (abs x) (abs (car deltas)))) deltas)
 	  (insert (format " *** WARNING, all pixel scroll values == %0.2f No real pixel scroll data stream?\n"
 			  (car deltas))
 		  " *** (try again, or use pixel-scroll-precision instead)\n")
-	(let ((mean (/ (cl-reduce #'+ deltas ) max-cnt))
-	      (min (apply #'min deltas))
-	      (max (apply #'max deltas)))
+	(let* ((deltas (mapcar #'abs deltas))
+	       (mean (/ (cl-reduce #'+ deltas ) max-cnt))
+	       (min (apply #'min deltas))
+	       (max (apply #'max deltas)))
 	  (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
 			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
     (display-buffer buf)))
