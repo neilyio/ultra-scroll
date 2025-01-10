@@ -58,8 +58,8 @@ scrolling information for your hardware; see the `PIXEL-DELTA` field of
 > [!IMPORTANT]
 > **Your Help Needed!** While `ultra-scroll` works out of the box for
 > most people, it's impossible to test all combinations of systems and
-> hardware, so please take a moment to report your smooth-scrolling
-> experiences: \#18.
+> hardware, so please take a moment to [report your smooth-scrolling
+> experiences](../../issues/18).
 
 ### Installation
 

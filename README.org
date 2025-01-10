@@ -36,7 +36,7 @@ If your mouse and/or system do not provide real pixel scrolling data, ~ultra-scr
 
 
 #+begin_important
-*Your Help Needed!*  While ~ultra-scroll~ works out of the box for most people, it's impossible to test all combinations of systems and hardware, so please take a moment to report your smooth-scrolling experiences: #18.
+*Your Help Needed!*  While ~ultra-scroll~ works out of the box for most people, it's impossible to test all combinations of systems and hardware, so please take a moment to [[../../issues/18][report your smooth-scrolling experiences]].
 #+end_important
 
 *** Installation
