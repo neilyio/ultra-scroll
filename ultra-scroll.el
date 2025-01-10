@@ -9,30 +9,32 @@
 ;; Prefix: ultra-scroll
 ;; Separator: -
 
-;; ultra-scroll is free software: you can redistribute it
-;; and/or modify it under the terms of the GNU General Public License
-;; as published by the Free Software Foundation, either version 3 of
-;; the License, or (at your option) any later version.
+;; ultra-scroll is free software: you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
 
-;; ultra-scroll is distributed in the hope that it will be
-;; useful, but WITHOUT ANY WARRANTY; without even the implied warranty
-;; of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; ultra-scroll is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; ultra-scroll enables fast, smooth, jump-free scrolling for Emacs.
-;; On emacs-mac it retains the swipe-to-scroll and pinch-out for tab
+;; ultra-scroll enables fast, smooth, jump-free scrolling for Emacs on
+;; all builds that support varying pixel scroll delta event data.  On
+;; emacs-mac it retains the swipe-to-scroll and pinch-out for tab
 ;; overview capabilities of that port.  On all ports, it can scroll
-;; past images taller than the window without problem.
+;; past images or other content taller than the window without issue.
 ;;
 ;; The strongly recommended scroll settings are:
+;; 
 ;;  scroll-margin=0
 ;;  scroll-conservatively=101
 ;;
-;; See also pixel-scroll-precision-mode in pixel-scroll.el.
+;; See also `pixel-scroll-precision-mode' in pixel-scroll.el.
 
 ;;; Code:
 ;;;; Requires
