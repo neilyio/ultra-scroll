@@ -304,6 +304,7 @@ PIXEL-DELTA values to see if they differ."
 			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
     (display-buffer buf)))
 
+(defvar-local ultra-scroll--hide-cursor-start nil)
 (defvar-local ultra-scroll--hide-cursor-timer nil)
 (defvar-local ultra-scroll--hide-cursor-undo nil)
 
@@ -318,6 +319,7 @@ PIXEL-DELTA values to see if they differ."
       ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
       ;;     (beginning-of-line)))
       (mapc #'funcall ultra-scroll--hide-cursor-undo)
+      (kill-local-variable 'ultra-scroll--hide-cursor-start)
       (kill-local-variable 'ultra-scroll--hide-cursor-timer)
       (kill-local-variable 'ultra-scroll--hide-cursor-undo))))
 
@@ -325,16 +327,16 @@ PIXEL-DELTA values to see if they differ."
   "Hide cursor in current buffer."
   (when ultra-scroll-hide-cursor
     (unless ultra-scroll--hide-cursor-timer
-      (setq ultra-scroll--hide-cursor-timer (timer-create))
+      (setq ultra-scroll--hide-cursor-start (point)
+            ultra-scroll--hide-cursor-timer (timer-create))
       (timer-set-function ultra-scroll--hide-cursor-timer
                           #'ultra-scroll--hide-cursor-undo (list (current-buffer))))
     (cancel-timer ultra-scroll--hide-cursor-timer)
     (timer-set-time ultra-scroll--hide-cursor-timer
                     (timer-relative-time nil ultra-scroll-hide-cursor))
     (timer-activate ultra-scroll--hide-cursor-timer)
-    (when (and (not ultra-scroll--hide-cursor-undo)
-               (or (save-excursion (forward-line -1) (<= (point) (window-start)))
-                   (save-excursion (forward-line 2) (>= (point) (window-end nil t)))))
+    (unless (or ultra-scroll--hide-cursor-undo
+                (equal (point) ultra-scroll--hide-cursor-start))
       (when (bound-and-true-p hl-line-mode)
         (hl-line-mode -1)
         (push 'hl-line-mode ultra-scroll--hide-cursor-undo))
