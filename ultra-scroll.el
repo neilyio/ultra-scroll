@@ -285,6 +285,8 @@ PIXEL-DELTA values to see if they differ."
       (insert "* " (emacs-version) "\n* " (if nc "" "No ") "Native Comp Detected"
 	      (if nc "\n" " (use native-comp for fastest scrolling performance)\n")
 	      "\n")
+      (when (and (featurep 'x) (not (featurep 'xinput2)))
+	(insert "   *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
       (insert (format " *** %s scroll events detected%s\n" cnt (if mac-basic " [Mac basic mouse]" "")))
       (if (cl-every (lambda (x) (= x (car deltas))) deltas)
 	  (insert (format " *** WARNING, all pixel scroll values == %0.2f. Dumb mouse?\n"
@@ -322,6 +324,8 @@ your system and hardware provide."
       (warn "ultra-scroll: scroll-conservatively > 0 is required for smooth scrolling of large images; 101 recommended"))
     (unless (= scroll-margin 0)
       (warn "ultra-scroll: scroll-margin = 0 is required for glitch-free smooth scrolling"))
+    (when (and (featurep 'x) (not (featurep 'xinput2)))
+      (warn "ultra-scroll: Emacs on Linux/X11 must be compiled --with-xinput2"))
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision]
 		(if (featurep 'mac-win) #'ultra-scroll-mac #'ultra-scroll))
     (setf (get 'pixel-scroll-precision-use-momentum 'us-orig-value)
