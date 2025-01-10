@@ -150,7 +150,7 @@ DELTA should be less than the window's height."
 	ultra-scroll--gc-timer nil))
 
 (defsubst ultra-scroll--scroll (delta window)
-  "Scroll by WINDOW by DELTA (positive or negative)."
+  "Scroll WINDOW by DELTA pixels (positive or negative)."
   (let (ignore)
     (unless (or (zerop delta)
 		(and (setq ignore (window-parameter window 'ultra-scroll--ignore))
