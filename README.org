@@ -34,6 +34,11 @@ See the [[./NEWS.org][NEWS]].
 If your mouse and/or system do not provide real pixel scrolling data, ~ultra-scroll~ will be equivalent to line-by-line scrolling.  To check, run ~M-x ultra-scroll-check~, and follow the direction.  If it reports spurious pixel scroll data, consider using ~pixel-scroll-precision-mode~ with ~pixel-scroll-precision-interpolate-mice~ instead.
 #+end_note
 
+
+#+begin_important
+*Your Help Needed!*  While ~ultra-scroll~ works out of the box for most people, it's impossible to test all combinations of systems and hardware, so please take a moment to report your smooth-scrolling experiences: #18.
+#+end_important
+
 *** Installation
 
 Not yet in a package archive.  For Emacs 29.1 and later, use ~package-vc-install~.  In the ~*scratch*~ buffer, enter

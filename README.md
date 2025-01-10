@@ -55,6 +55,12 @@ scrolling information for your hardware; see the `PIXEL-DELTA` field of
 > `pixel-scroll-precision-mode` with
 > `pixel-scroll-precision-interpolate-mice` instead.
 
+> [!IMPORTANT]
+> **Your Help Needed!** While `ultra-scroll` works out of the box for
+> most people, it's impossible to test all combinations of systems and
+> hardware, so please take a moment to report your smooth-scrolling
+> experiences: \#18.
+
 ### Installation
 
 Not yet in a package archive. For Emacs 29.1 and later, use
