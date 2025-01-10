@@ -285,6 +285,8 @@ PIXEL-DELTA values to see if they differ."
       (insert "* " (emacs-version) "\n* " (if nc "" "No ") "Native Comp Detected"
 	      (if nc "\n" " (use native-comp for fastest scrolling performance)\n")
 	      "\n")
+      (when (and (featurep 'x) (not (featurep 'xinput2)))
+	(insert "   *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
       (insert (format " *** %s scroll events detected%s\n" cnt (if mac-basic " [Mac basic mouse]" "")))
       (if (cl-every (lambda (x) (= x (car deltas))) deltas)
 	  (insert (format " *** WARNING, all pixel scroll values == %0.2f. Dumb mouse?\n"
