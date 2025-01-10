@@ -372,8 +372,10 @@ your system and hardware provide."
       (warn "ultra-scroll: scroll-conservatively > 0 is required for smooth scrolling of large images; 101 recommended"))
     (unless (= scroll-margin 0)
       (warn "ultra-scroll: scroll-margin = 0 is required for glitch-free smooth scrolling"))
-    (when (and ultra-scroll-hide-cursor touch-screen-precision-scroll)
-      ;; Advices needed for touch scrolling
+    (when (and ultra-scroll-hide-cursor
+               (or pixel-scroll-precision-interpolate-page
+                   touch-screen-precision-scroll))
+      ;; Advices needed for touch scrolling and page interpolation
       (advice-add #'pixel-scroll-precision-scroll-down-page :after #'ultra-scroll--hide-cursor)
       (advice-add #'pixel-scroll-precision-scroll-up-page :after #'ultra-scroll--hide-cursor))
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision]
