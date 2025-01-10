@@ -37,7 +37,7 @@ swiping, and is an `emacs-mac` exclusive.
 
 ## Release Information
 
-See the \[NEWS\](./NEWS.org).
+See the [NEWS](./NEWS.org).
 
 ## Compatibility, Installation, and Usage
 

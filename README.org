@@ -22,7 +22,7 @@ Note, the ~previous-buffer~ animation above is from two-finger track-pad swiping
 
 ** Release Information
 
-See the [NEWS](./NEWS.org).
+See the [[./NEWS.org][NEWS]].
   
 ** Compatibility, Installation, and Usage
 
