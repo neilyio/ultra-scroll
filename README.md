@@ -35,6 +35,10 @@ swiping, and is an `emacs-mac` exclusive.
 > If you scroll buffers with tall images visible, this is also a good
 > reason to give `ultra-scroll` a try.
 
+## Release Information
+
+See the \[NEWS\](./NEWS.org).
+
 ## Compatibility, Installation, and Usage
 
 ### Compatibility

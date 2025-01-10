@@ -20,7 +20,10 @@ Note, the ~previous-buffer~ animation above is from two-finger track-pad swiping
   If you scroll buffers with tall images visible, this is also a good reason to give ~ultra-scroll~ a try.
   #+end_note
 
+** Release Information
 
+See the [NEWS](./NEWS.org).
+  
 ** Compatibility, Installation, and Usage
 
 *** Compatibility
