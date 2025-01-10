@@ -28,7 +28,7 @@ Note, the ~previous-buffer~ animation above is from two-finger track-pad swiping
 ~ultra-scroll~ should work across all systems that provide pixel scrolling information for your hardware; see the ~PIXEL-DELTA~ field of ~wheel-up/down~ events.
 
 #+begin_note
-If your mouse and/or system do not provide pixel scrolling data, ~ultra-scroll~ falls back to line-by-line scrolling.  To check, run ~M-x ultra-scroll-check~, scroll your mouse or track-pad, and examine the message in the =*Warnings*= buffer.  If it reports =MISSING= pixel scroll data, consider using ~pixel-scroll-precision-mode~ with ~pixel-scroll-precision-interpolate-mice~ instead.
+If your mouse and/or system do not provide real pixel scrolling data, ~ultra-scroll~ will be equivalent to line-by-line scrolling.  To check, run ~M-x ultra-scroll-check~, and follow the direction.  If it reports spurious pixel scroll data, consider using ~pixel-scroll-precision-mode~ with ~pixel-scroll-precision-interpolate-mice~ instead.
 #+end_note
 
 *** Installation
@@ -60,7 +60,7 @@ For best performance, use a build with native-compilation (see [[#Speed][Speed]]
 
 *** Troubleshooting
 
-If it doesn't seem to do anything for you, please run ~M-x ultra-scroll-check~.  If this command reports pixel data are =MISSING=, ~ultra-scroll~ won't do much for you.  Look into getting hardware/system support for ~PIXEL-DELTA~ scrolling event information.
+If it doesn't seem to do anything for you, please run ~M-x ultra-scroll-check~.  If this command reports the pixel scroll data are all the same, ~ultra-scroll~ won't do much for you.  Look into getting hardware/system support for ~PIXEL-DELTA~ scrolling event information, or switch to ~pixel-scroll-precision-mode~, which provides simulated smooth scrolling via interpolation.
 
 ** Configuration
 
@@ -71,7 +71,7 @@ There is little to no configuration.
 If desired for use with dumb mice on ~emacs-mac~, the variable ~ultra-scroll-mac-multiplier~ can be set to a number smaller or larger than ~1.0~ to decrease/increase mouse-wheel scrolling speed.  Note that many fancier wheeled mice have drivers that /simulate/ track-pads, so this variable will have no effect on them.  For these, and for track-pads generally, scrolling speed should be configured in system settings.
 
 #+begin_note
-Only certain systems provide pixel scroll offset (~PIXEL-DELTA~) for older/wheeled mice.  Use ~M-x ultra-scroll-check~ to see if yours does.  If not, it's recommended to stick with ~pixel-scroll-precision-mode~.
+Only certain systems provide real variable pixel scroll offset data (~PIXEL-DELTA~) for older/wheeled ("dumb") mice.  Use ~M-x ultra-scroll-check~ to see if yours does.  If not, it's recommended to upgrade hardware, or stick with ~pixel-scroll-precision-mode~.
 #+end_note
 
 *** Mitigating garbage collection pauses
@@ -80,10 +80,10 @@ To reduce the likelihood of garbage collection during scroll, which can introduc
 
 *** pixel-scroll inter-operation
 
-By design, ~ultra-scroll~ simply uses the in-built ~pixel-scroll-precision-mode-map~, remapping the scrolling functions there with its own.  The latter also has the capability of /faking/ smooth scrolling using interpolation, e.g. for ~scroll-up/down-command~.  Simply set the relevant variables, like ~pixel-scroll-precision-interpolate-page~, and they should "just work".
+By design, ~ultra-scroll~ uses the in-built ~pixel-scroll-precision-mode-map~, remapping its scrolling function with its own.  The latter also has the capability of /faking/ smooth scrolling using interpolation for non mouse movements, e.g. for ~scroll-up/down-command~.  Simply set the relevant variables, like ~pixel-scroll-precision-interpolate-page~, and they should "just work".
 
 #+begin_important
-Unlike ~pixel-scroll-precision-mode-map~, ~ultra-scroll~ does not support "faking" smooth pixel-level scrolling for mouse wheel movement on systems that do not provide this data.  You can determine if yours does with ~M-x ultra-scroll-check~.  If not, it's recommended to stick with ~pixel-scroll-precision-mode~.
+Unlike ~pixel-scroll-precision-mode-map~, ~ultra-scroll~ does not support "faking" smooth pixel-level scrolling for mouse wheel movement on systems that do not provide accurate data.  You can determine if yours does with ~M-x ultra-scroll-check~.  If not, it's recommended to stick with ~pixel-scroll-precision-mode~.
 #+end_important
 
 ** Related packages and functionality
