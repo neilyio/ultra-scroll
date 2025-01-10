@@ -247,27 +247,56 @@ will be replayed for left/right touch ends."
 (put 'ultra-scroll-mac 'scroll-command t)
 
 (defun ultra-scroll-check ()
-  "Check and report on the scrolling event data your system provides."
+  "Check and report on the scrolling event data your system provides.
+This reads 30 independent scroll events and checks their
+PIXEL-DELTA values to see if they differ."
   (interactive)
-  (message "ultra-scroll: checking scroll data  -- scroll your mouse wheel or track-pad!")
-  (let* ((nc (string-match "\\bNATIVE_COMP\\b" system-configuration-features))
-	 ev)
-    (while (and (setq ev (read-event))
-		(not (memq (event-basic-type ev)
-			   '(wheel-up wheel-down)))))
-    (display-warning
-     :debug
-     (format "ultra-scroll-check: %s detected, found %s pixel scroll data%s"
-	     (event-basic-type ev)
-	     (if (featurep 'mac-win)
-		 (let ((plist (nth 3 ev)))
-		   (cond ((null plist) "NO")
-			 ((plist-get plist :scrolling-delta-y) "FULL")
-			 ((plist-get plist :delta-y) "BASIC")
-			 (t "MISSING")))
-	       (if (nth 4 ev) "FULL" "MISSING"))
-	     (if nc "" " [NO NATIVE COMPILATION!]")))))
-
+  (let
+      ((buf (get-buffer-create "*ultra-scroll-report*"))
+       (nc (string-match "\\bNATIVE_COMP\\b" system-configuration-features))
+       (inhibit-read-only t)
+       (max-cnt 30) (cnt 1) deltas mac-basic ev)
+    (message (concat "ultra-scroll: checking scroll data\n"
+		     (format
+		      "Scroll your mouse wheel or track-pad slow then fast to generate %d events"
+		      max-cnt)))
+    (while (and (setq ev (read-event)) (< cnt max-cnt))
+      (when (memq (event-basic-type ev) '(wheel-up wheel-down))
+	(message "Detected %2d/%2d wheel event%s" cnt max-cnt (if (> cnt 1) "s" ""))
+	(cl-incf cnt)
+	(if (featurep 'mac-win)
+	    (let ((plist (nth 3 ev)))
+	      (when (null plist)
+		(error "Malformed wheel event detected! %s" ev))
+	      (if-let ((sdy (plist-get plist :scrolling-delta-y)))
+		  (push sdy deltas)
+		(if-let ((dy (plist-get plist :delta-y)))
+		    (progn
+		      (push dy deltas)
+		      (setq mac-basic t))
+		  (error "Malformed wheel event detected!  %s" ev))))
+	  (if-let ((pix-delta (nth 4 ev)))
+	      (push (cdr pix-delta) deltas)
+	    (error "Malformed wheel event detected!  %s" ev)))))
+    (with-current-buffer buf
+      (erase-buffer)
+      (help-mode)
+      (insert "  == ultra-scroll Scroll Event Report ==\n\n")
+      (insert "* " (emacs-version) "\n* " (if nc "" "No ") "Native Comp Detected"
+	      (if nc "\n" " (use native-comp for fastest scrolling performance)\n")
+	      "\n")
+      (insert (format " *** %s scroll events detected%s\n" cnt (if mac-basic " [Mac basic mouse]" "")))
+      (if (cl-every (lambda (x) (= x (car deltas))) deltas)
+	  (insert (format " *** WARNING, all pixel scroll values == %0.2f. Dumb mouse?\n"
+			  (car deltas))
+		  " *** (try again, or use pixel-scroll-precision instead)\n")
+	(let ((mean (/ (cl-reduce #'+ deltas ) max-cnt))
+	      (min (apply #'min deltas))
+	      (max (apply #'max deltas)))
+	  (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
+			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
+    (display-buffer buf)))
+       
 ;;;; Mode
 ;;;###autoload
 (define-minor-mode ultra-scroll-mode
