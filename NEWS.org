@@ -6,6 +6,7 @@
 
 - Change to custom group ~scrolling~.
 - Improve ultra-scroll-check to correctly interrogate a group of wheel events to determine if they are "real" or fake.  Some Linux systems report ~PIXEL-DELTA~'s with fixed values (a line height), which effectively reverts ~ultra-scroll~ to line-by-line scrolling.
+- Improve ~ultra-scroll-check~ to guard against up/down scrolling falsely indicating diverse scrolls.
 - Check for ~--with-xinput2~ on Linux and warning if not found (needed for pixel scrolling; see #14).
 
 * v0.2.1 (2025-01-09)
