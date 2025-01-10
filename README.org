@@ -139,7 +139,8 @@ As a result of these types of difficulties, pixel scrolling codes and packages a
 For posterity, some things I discovered in my own mostly-victorious battle against unwanted re-centering during smooth scroll, including across jumbo lines:
 
 - ~scroll-conservatively=101~ is very helpful, since with this Emacs will "scroll just enough text to bring point into view, even if you move far away".  It does not defeat re-centering, but makes it... more manageable.
-- You cannot let-bind ~scroll-conservatively~ for effect, as it comes into play only on re-display (after your event handler returns). 
+- You cannot let-bind ~scroll-conservatively~ for effect, as it comes into play only on re-display (after your event handler returns).
+- ~scroll-margin>0~ is a no-no.  This setting always moves point at least that many lines from the window boundaries, which, unless you can reliably place point there during the scroll (even in the presence of jumbo lines; see below), will cause loop-back.  See #3.
 - Virtual Scroll:
   + ~vscroll~ -- a virtual rendered scrolling window hiding /below/ the current window -- is key to smooth scrolling, and altering ~vscroll~ to move the view-port is incredibly fast.
   + There is plenty of ~vscroll~ room available, including the entirety of any tall lines (as for displayed images) in view.
@@ -178,7 +179,7 @@ I often wonder how many people who claim "emacs is laggy" form that impression f
 
 *** Take-aways
 
-1. Very large window sizes and buffers with "extra" processing going on, like treesitter, LSP modes, elaborate font-locking, tons overlays, etc. can slow down scrolling.
+1. Very large window sizes and buffers with "extra" processing going on, like treesitter, LSP modes, elaborate font-locking, tons of overlays, etc. can slow down scrolling.
 2. If the scroll command does its work in <10ms, you do not notice it.  You can definitely start feeling it when scroll commands take more than 15ms.
 3. The underlying scroll primitives need to leave substantial overhead in time, so that all the other emacs commands that occur when new content is brought into view (font-lock) can run without causing scroll lag, for all your different modes.  *Faster is better*: 3ms or less would be /ideal/.
 4. Building ~--with-native-comp~ is /essential/ for ultra-smooth scrolling.  It increases the speed of each individual scroll commands by *>3x*, which is important since these commands are called so frequently.

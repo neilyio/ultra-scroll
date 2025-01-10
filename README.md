@@ -253,6 +253,10 @@ across jumbo lines:
   manageable.
 - You cannot let-bind `scroll-conservatively` for effect, as it comes
   into play only on re-display (after your event handler returns).
+- `scroll-margin>0` is a no-no. This setting always moves point at least
+  that many lines from the window boundaries, which, unless you can
+  reliably place point there during the scroll (even in the presence of
+  jumbo lines; see below), will cause loop-back. See \#3.
 - Virtual Scroll:
   - `vscroll` – a virtual rendered scrolling window hiding *below* the
     current window – is key to smooth scrolling, and altering `vscroll`
@@ -340,7 +344,7 @@ sizes[^2].
 ### Take-aways
 
 1.  Very large window sizes and buffers with "extra" processing going
-    on, like treesitter, LSP modes, elaborate font-locking, tons
+    on, like treesitter, LSP modes, elaborate font-locking, tons of
     overlays, etc. can slow down scrolling.
 2.  If the scroll command does its work in \<10ms, you do not notice it.
     You can definitely start feeling it when scroll commands take more
