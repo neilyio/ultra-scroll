@@ -6,7 +6,7 @@ You move your fingers, the page responds, /instantly/:
 
 [[https://github-production-user-asset-6210df.s3.amazonaws.com/93749/290018933-ed5cf414-eab5-4ba8-b077-30cac0c5ace0.mov]]
 
-Importantly, ~ultra-scroll~ can cleanly /scroll right across/ tall images and other jumbo lines -- a perennial problem with scrolling packages to date.  As a bonus, it enables relatively smooth scrolling even with dumb third party mice.
+Importantly, ~ultra-scroll~ can cleanly /scroll right across/ tall images and other jumbo lines -- a perennial problem with scrolling packages to date.  As a bonus, it enables relatively smooth scrolling even with dumb third party mice on some systems.
 
 Note, the ~previous-buffer~ animation above is from two-finger track-pad swiping, and is an ~emacs-mac~ exclusive.
 
