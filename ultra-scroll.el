@@ -66,6 +66,12 @@ Operates only if `ultra-scroll-gc-percentage' is non-nil."
   :type 'float
   :group 'scrolling)
 
+(defcustom ultra-scroll-hide-cursor 0.3
+  "Timer in sec after which to restore the cursor.
+Set to nil to disable."
+  :type '(choice (const nil) float)
+  :group 'scrolling)
+
 ;;;; Event callback/scroll
 (defun ultra-scroll-down (delta)
   "Scroll the current window down by DELTA pixels.
@@ -170,7 +176,8 @@ DELTA should be less than the window's height."
 	     (set-window-parameter window 'ultra-scroll--ignore
 				   (cons (point) end))
 	     (message (error-message-string
-		       (if end '(end-of-buffer) '(beginning-of-buffer)))))))))))
+		       (if end '(end-of-buffer) '(beginning-of-buffer)))))))
+        (ultra-scroll--hide-cursor)))))
 
 (defsubst ultra-scroll--maybe-relax-gc ()
   "Lift the GC threshold percentage to avoid GC during scroll.
@@ -296,7 +303,49 @@ PIXEL-DELTA values to see if they differ."
 	  (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
 			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
     (display-buffer buf)))
-       
+
+(defvar-local ultra-scroll--hide-cursor-timer nil)
+(defvar-local ultra-scroll--hide-cursor-undo nil)
+
+(defun ultra-scroll--hide-cursor-undo (buf)
+  "Undo cursor hiding in BUF."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      ;; TODO It would be nice to recenter the point here,
+      ;; but this leads to problems with tall images.
+      ;; (when-let ((win (get-buffer-window buf)))
+      ;;   (with-selected-window win
+      ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
+      ;;     (beginning-of-line)))
+      (mapc #'funcall ultra-scroll--hide-cursor-undo)
+      (kill-local-variable 'ultra-scroll--hide-cursor-timer)
+      (kill-local-variable 'ultra-scroll--hide-cursor-undo))))
+
+(defun ultra-scroll--hide-cursor (&rest _)
+  "Hide cursor in current buffer."
+  (when ultra-scroll-hide-cursor
+    (unless ultra-scroll--hide-cursor-timer
+      (setq ultra-scroll--hide-cursor-timer (timer-create))
+      (timer-set-function ultra-scroll--hide-cursor-timer
+                          #'ultra-scroll--hide-cursor-undo (list (current-buffer))))
+    (cancel-timer ultra-scroll--hide-cursor-timer)
+    (timer-set-time ultra-scroll--hide-cursor-timer
+                    (timer-relative-time nil ultra-scroll-hide-cursor))
+    (timer-activate ultra-scroll--hide-cursor-timer)
+    (when (and (not ultra-scroll--hide-cursor-undo)
+               (or (save-excursion (forward-line -1) (<= (point) (window-start)))
+                   (save-excursion (forward-line 2) (>= (point) (window-end nil t)))))
+      (when-let ((ov (bound-and-true-p hl-line-overlay)))
+        (overlay-put ov 'face nil)
+        (push 'hl-line-highlight ultra-scroll--hide-cursor-undo)
+        (push 'hl-line-unhighlight ultra-scroll--hide-cursor-undo))
+      (push (if (local-variable-p 'cursor-type)
+                (let ((orig cursor-type))
+                  (lambda () (setq-local cursor-type orig)))
+              (lambda () (kill-local-variable 'cursor-type)))
+            ultra-scroll--hide-cursor-undo)
+      (setq-local cursor-type nil))))
+
 ;;;; Mode
 ;;;###autoload
 (define-minor-mode ultra-scroll-mode
@@ -322,6 +371,10 @@ your system and hardware provide."
       (warn "ultra-scroll: scroll-conservatively > 0 is required for smooth scrolling of large images; 101 recommended"))
     (unless (= scroll-margin 0)
       (warn "ultra-scroll: scroll-margin = 0 is required for glitch-free smooth scrolling"))
+    (when (and ultra-scroll-hide-cursor touch-screen-precision-scroll)
+      ;; Advices needed for touch scrolling
+      (advice-add #'pixel-scroll-precision-scroll-down-page :after #'ultra-scroll--hide-cursor)
+      (advice-add #'pixel-scroll-precision-scroll-up-page :after #'ultra-scroll--hide-cursor))
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision]
 		(if (featurep 'mac-win) #'ultra-scroll-mac #'ultra-scroll))
     (setf (get 'pixel-scroll-precision-use-momentum 'us-orig-value)
@@ -329,6 +382,8 @@ your system and hardware provide."
     (setq pixel-scroll-precision-use-momentum nil)
     (setq ultra-scroll--gc-percentage-orig gc-cons-percentage))
    (t
+    (advice-remove #'pixel-scroll-precision-scroll-down-page #'ultra-scroll--hide-cursor)
+    (advice-remove #'pixel-scroll-precision-scroll-up-page #'ultra-scroll--hide-cursor)
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision] nil)
     (setq pixel-scroll-precision-use-momentum
 	  (get 'pixel-scroll-precision-use-momentum 'us-orig-value))))
