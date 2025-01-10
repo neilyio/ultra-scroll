@@ -326,12 +326,12 @@ PIXEL-DELTA values to see if they differ."
 (defun ultra-scroll--hide-cursor (&rest _)
   "Hide cursor in current buffer."
   (when ultra-scroll-hide-cursor
-    (unless ultra-scroll--hide-cursor-timer
+    (if ultra-scroll--hide-cursor-timer
+        (cancel-timer ultra-scroll--hide-cursor-timer)
       (setq ultra-scroll--hide-cursor-start (point)
             ultra-scroll--hide-cursor-timer (timer-create))
       (timer-set-function ultra-scroll--hide-cursor-timer
                           #'ultra-scroll--hide-cursor-undo (list (current-buffer))))
-    (cancel-timer ultra-scroll--hide-cursor-timer)
     (timer-set-time ultra-scroll--hide-cursor-timer
                     (timer-relative-time nil ultra-scroll-hide-cursor))
     (timer-activate ultra-scroll--hide-cursor-timer)
