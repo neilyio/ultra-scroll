@@ -88,10 +88,16 @@ To reduce the likelihood of garbage collection during scroll, which can introduc
 
 *** pixel-scroll inter-operation
 
-By design, ~ultra-scroll~ uses the in-built ~pixel-scroll-precision-mode-map~, remapping its scrolling function with its own.  The latter also has the capability of /faking/ smooth scrolling using interpolation for non mouse movements, e.g. for ~scroll-up/down-command~.  Simply set the relevant variables, like ~pixel-scroll-precision-interpolate-page~, and they should "just work".
+By design, ~ultra-scroll~ activates the builtin ~pixel-scroll-precision-mode~, but remaps its scrolling function with its own.  The latter also has the capability of /faking/ smooth scrolling using interpolation.  It can do this for non-mouse movements, like ~scroll-up/down-command~ (usually on =PgUp= / =PgDown=).  To use these additional capabilities, simply set the relevant variables, like ~pixel-scroll-precision-interpolate-page~, and they should "just work".
+
+Note that ~ultra-scroll~ disables ~pixel-scroll-precision-use-momentum~, since it may not handle tall image scrolling well.  Some systems (MacOS) get momentum scrolling "for free" from the OS, independent of this setting.  If you experiment with re-enabling ~pixel-scroll-precision-use-momentum~ on other systems like Linux, please open an issue to report your findings.
+
+#+begin_warning
+~ultra-scroll~ activates ~pixel-scroll-precision-mode~ by side effect.  If you are experimenting with both modes during a single session, always disable ~ultra-scroll-mode~ first and then re-enable ~pixel-scroll-precision-mode~.
+#+end_warning
 
 #+begin_important
-Unlike ~pixel-scroll-precision-mode-map~, ~ultra-scroll~ does not support "faking" smooth pixel-level scrolling for mouse wheel movement on systems that do not provide accurate data.  You can determine if yours does with ~M-x ultra-scroll-check~.  If not, it's recommended to stick with ~pixel-scroll-precision-mode~.
+Unlike ~pixel-scroll-precision-mode~, ~ultra-scroll~ does not support "faking" smooth pixel-level scrolling for mouse wheel movement on systems that do not provide accurate data.  You can determine if yours does with ~M-x ultra-scroll-check~.  If not, it's recommended to stick with ~pixel-scroll-precision-mode~.
 #+end_important
 
 ** Related packages and functionality
