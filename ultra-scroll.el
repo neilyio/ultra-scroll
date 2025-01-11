@@ -320,7 +320,7 @@ on systems providing pixel-level scroll data; see
 your system and hardware provide."
   :global t
   :group 'scrolling
-  :keymap pixel-scroll-precision-mode-map ; reuse
+  (pixel-scroll-precision-mode (if ultra-scroll-mode 1 -1)) ;; reuse
   (cond
    (ultra-scroll-mode
     (unless (> scroll-conservatively 0)
@@ -338,8 +338,7 @@ your system and hardware provide."
    (t
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision] nil)
     (setq pixel-scroll-precision-use-momentum
-	  (get 'pixel-scroll-precision-use-momentum 'us-orig-value))))
-  (setq mwheel-coalesce-scroll-events (not ultra-scroll-mode)))
+	  (get 'pixel-scroll-precision-use-momentum 'us-orig-value)))))
 
 (provide 'ultra-scroll)
 ;;; ultra-scroll.el ends here
