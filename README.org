@@ -86,7 +86,11 @@ Only certain systems provide real variable pixel scroll offset data (~PIXEL-DELT
 
 To reduce the likelihood of garbage collection during scroll, which can introduce slight pauses, the value of ~gc-cons-percentage~ is temporarily increased, and reset during idle time.  The defaults should work well for most situations, but if necessary, can be configured using ~ultra-scroll-gc-percentage~ and ~ultra-scroll-gc-idle-time~.
 
-*** pixel-scroll inter-operation
+*** Hiding cursor during scroll
+
+By default, ~ultra-scroll~ hides the cursor (and a ~hl-line~ if active) once it reaches the window edge, to prevent "bouncing cursor" behavior.  This can be disabled, or the time delay to restore the cursor set, with ~ultra-scroll-hide-cursor~. 
+
+*** ~pixel-scroll-precision~ interoperability
 
 By design, ~ultra-scroll~ activates the builtin ~pixel-scroll-precision-mode~, but remaps its scrolling function with its own.  The latter also has the capability of /faking/ smooth scrolling using interpolation.  It can do this for non-mouse movements, like ~scroll-up/down-command~ (usually on =PgUp= / =PgDown=).  To use these additional capabilities, simply set the relevant variables, like ~pixel-scroll-precision-interpolate-page~, and they should "just work".
 

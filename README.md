@@ -127,7 +127,14 @@ temporarily increased, and reset during idle time. The defaults should
 work well for most situations, but if necessary, can be configured using
 `ultra-scroll-gc-percentage` and `ultra-scroll-gc-idle-time`.
 
-### pixel-scroll inter-operation
+### Hiding cursor during scroll
+
+By default, `ultra-scroll` hides the cursor (and a `hl-line` if active)
+once it reaches the window edge, to prevent "bouncing cursor" behavior.
+This can be disabled, or the time delay to restore the cursor set, with
+`ultra-scroll-hide-cursor`.
+
+### `pixel-scroll-precision` interoperability
 
 By design, `ultra-scroll` activates the builtin
 `pixel-scroll-precision-mode`, but remaps its scrolling function with
