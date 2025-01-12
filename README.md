@@ -51,8 +51,8 @@ scrolling information for your hardware; see the `PIXEL-DELTA` field of
 > If your mouse and/or system do not provide real pixel scrolling data,
 > `ultra-scroll` will be equivalent to line-by-line scrolling. To check,
 > run `M-x ultra-scroll-check`, and follow the direction. If it reports
-> spurious pixel scroll data, consider using
-> `pixel-scroll-precision-mode` with
+> you have no real pixel scroll data, and you value and approximation of
+> smooth scrolling, consider using `pixel-scroll-precision-mode` with
 > `pixel-scroll-precision-interpolate-mice` instead.
 
 > [!IMPORTANT]
@@ -193,8 +193,9 @@ Scrolling Emacs feels like moving through (light) molasses. *No bueno*.
 Checking into it, the smooth scroll event callback takes 15-20ms
 scrolling in one direction, and 3–5x longer in the other. This
 performance is perfectly fine for normal mice which deliver a few
-scrolling events a second. *But track-pad scroll events are arriving
-every 15ms or less*! The code just couldn't keep up. Hence the molasses.
+scrolling events a second. *But track-pad and fancy mouse scroll events
+are arriving every 10ms, or less*! The code just couldn't keep up.
+Hence: molasses.
 
 I also wanted to be able to scroll through image-rich documents without
 worrying about jumpy/loopy scrolling behavior. And my extra dumb mouse
@@ -230,13 +231,13 @@ scroll interpolation, a timer-based *momentum* phase, etc.
 ### Why are there so many smooth scrolling modes? Why is this so hard? It's just *scrolling*…
 
 Emacs was designed long before mice were common, not to mention modern
-high-resolution track-pads which send rapid micro-updates ("move up one
-pixel!") more than 60 times per second. Unlike other programs, Emacs
-insists on keeping the cursor (point) visible at all times. Deep in its
-re-display code, Emacs tracks where point is, and works diligently to
-ensure it never falls outside the visible window. It does this not by
-moving point (that's the user's job), but by moving the *window*
-(visible range of lines) surrounding point.
+high-resolution track-pads and mice which send rapid micro-updates
+("move up one pixel!") 60-120 times per second. Unlike other programs,
+Emacs *insists* on keeping the cursor (point) visible at all times. Deep
+in its re-display code, Emacs tracks where point is, and works
+diligently to ensure it never falls outside the visible window. It does
+this not by moving point (that's the user's job), but by moving the
+*window* (visible range of lines) surrounding point.
 
 Once you are used to this behavior, it's actually pretty nice for
 navigating with `C-n` / `C-p` and friends. But for smooth scrolling with
@@ -356,14 +357,12 @@ right in my usage.
 ## Speed
 
 I often wonder how many people who claim "emacs is laggy" form that
-impression from scrolling. Scrolling at 60Hz or faster with modern mice
-and track-pads puts a lot of stress on systems, and is often the first
-place lag appears.
-
-`ultra-scroll` is fast *by design*. I made some observations about its
-speed using `ELP` to measure the average call duration of individual
-scroll functions (`ultra-scroll-up/down`) with various buffer and window
-sizes[^2].
+impression from scrolling. Scrolling at 60-120Hz or faster with modern
+mice and track-pads puts a lot of stress on systems, and is often the
+first place lag appears. So `ultra-scroll` is fast *by design*. I made
+some observations about its speed using `ELP` to measure the average
+call duration of individual scroll functions (`ultra-scroll-up/down`)
+with various buffer and window sizes[^2].
 
 ### Take-aways
 
@@ -373,11 +372,11 @@ sizes[^2].
 2.  If the scroll command does its work in \<10ms, you do not notice it.
     You can definitely start feeling it when scroll commands take more
     than 15ms.
-3.  The underlying scroll primitives need to leave substantial overhead
-    in time, so that all the other emacs commands that occur when new
+3.  The underlying scroll primitives need to leave some overhead in
+    time, so that all the other emacs commands that occur when new
     content is brought into view (font-lock) can run without causing
     scroll lag, for all your different modes. **Faster is better**: 3ms
-    or less would be *ideal*.
+    or less in a light buffer would be *ideal*.
 4.  Building `--with-native-comp` is *essential* for ultra-smooth
     scrolling. It increases the speed of each individual scroll commands
     by **\>3x**, which is important since these commands are called so
