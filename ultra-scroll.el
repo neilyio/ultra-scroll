@@ -248,16 +248,16 @@ will be replayed for left/right touch ends."
 (put 'ultra-scroll 'scroll-command t)
 (put 'ultra-scroll-mac 'scroll-command t)
 
-(defun ultra-scroll-check ()
+(defun ultra-scroll-check (event-cnt)
   "Check and report on the scrolling event data your system provides.
-This reads 30 independent scroll events and checks their
-PIXEL-DELTA values to see if they differ."
-  (interactive)
+This reads EVENT-CNT independent scroll events (default: 30) and checks
+their PIXEL-DELTA values to see if they differ."
+  (interactive "p")
   (let
       ((buf (get-buffer-create "*ultra-scroll-report*"))
        (nc (string-match "\\bNATIVE_COMP\\b" system-configuration-features))
        (inhibit-read-only t)
-       (max-cnt 30) (cnt 1) deltas mac-basic ev)
+       (max-cnt (max event-cnt 30)) (cnt 1) deltas mac-basic ev)
     (message (concat "ultra-scroll: checking scroll data\n"
 		     (format
 		      "Scroll your mouse wheel or track-pad slow then fast to generate %d events"
