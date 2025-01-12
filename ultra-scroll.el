@@ -266,13 +266,14 @@ their PIXEL-DELTA values to see if they differ."
       ((buf (get-buffer-create "*ultra-scroll-report*"))
        (nc (string-match "\\bNATIVE_COMP\\b" system-configuration-features))
        (inhibit-read-only t)
-       (max-cnt (max event-cnt 30)) (cnt 1) deltas mac-basic ev)
+       (max-cnt (max event-cnt 30)) (cnt 1) deltas mac-basic ev tm)
     (message (concat "ultra-scroll: checking scroll data\n"
 		     (format
 		      "Scroll your mouse wheel or track-pad slow then fast to generate %d events"
 		      max-cnt)))
     (while (and (setq ev (read-event)) (< cnt max-cnt))
       (when (memq (event-basic-type ev) '(wheel-up wheel-down))
+	(unless tm (setq tm (current-time)))
 	(message "Detected %2d/%2d wheel event%s" cnt max-cnt (if (> cnt 1) "s" ""))
 	(cl-incf cnt)
 	(if (featurep 'mac-win)
@@ -289,6 +290,7 @@ their PIXEL-DELTA values to see if they differ."
 	  (if-let ((pix-delta (nth 4 ev)))
 	      (push (cdr pix-delta) deltas)
 	    (error "Malformed wheel event detected!  %s" ev)))))
+    (setq tm (float-time (time-since tm)))
     (with-current-buffer buf
       (erase-buffer)
       (help-mode)
@@ -298,11 +300,12 @@ their PIXEL-DELTA values to see if they differ."
 	      "\n")
       (when (and (featurep 'x) (not (featurep 'xinput2)))
 	(insert " *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
-      (insert (format " *** %s scroll events detected%s\n" cnt (if mac-basic " [Mac basic mouse]" "")))
+      (insert (format " ** %s scroll events%s detected in %0.2fs (%0.1f events/s)\n" cnt
+		      (if mac-basic " [Mac basic mouse]" "") tm (/ (float cnt) tm)))
       (if (cl-every (lambda (x) (= (abs x) (abs (car deltas)))) deltas)
 	  (insert (format " *** WARNING, all pixel scroll values == %0.2f No real pixel scroll data stream?\n"
 			  (car deltas))
-		  " *** (try again, or use pixel-scroll-precision instead)\n")
+		  " ** (try again, or use pixel-scroll-precision instead)\n")
 	(let* ((deltas (mapcar #'abs deltas))
 	       (mean (/ (cl-reduce #'+ deltas ) max-cnt))
 	       (min (apply #'min deltas))
