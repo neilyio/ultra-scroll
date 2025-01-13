@@ -1,4 +1,4 @@
-# ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
+# ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
 
 `ultra-scroll`[^1] is a smooth-scrolling package for emacs, with native
 support for standard builds as well as
