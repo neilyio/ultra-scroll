@@ -39,9 +39,7 @@ swiping, and is an `emacs-mac` exclusive.
 
 See the [NEWS](./NEWS.org).
 
-## Compatibility, Installation, and Usage
-
-### Compatibility
+## Compatibility
 
 `ultra-scroll` should work across all systems that provide pixel-level
 scrolling information for your input hardware. If you don't think
@@ -71,7 +69,7 @@ interpolation) instead.
 > hardware, so please take a moment to [report your smooth-scrolling
 > experiences](../../issues/18) for the benefit of others.
 
-### Installation
+## Installation
 
 Not yet in a package archive. For Emacs 29.1 and later, use
 `package-vc-install`. In the `*scratch*` buffer, enter
@@ -92,22 +90,13 @@ move to the final paren, and `C-x C-e`. Installation is then simple:
   (ultra-scroll-mode 1))
 ```
 
-### Usage
+## Usage
 
 Just start scrolling :).
 
 > [!TIP]
 > For best performance, use a build with native-compilation (see
 > [Speed](#Speed)).
-
-### Troubleshooting
-
-If it doesn't seem to do anything for you, please run
-`M-x ultra-scroll-check`. If this command reports the pixel scroll data
-are all the same, `ultra-scroll` won't do much for you. Look into
-getting hardware/system support for `PIXEL-DELTA` scrolling event
-information, or switch to `pixel-scroll-precision-mode`, which provides
-simulated smooth scrolling via interpolation.
 
 ## Configuration
 
@@ -144,15 +133,17 @@ once it reaches the window edge, to prevent "bouncing cursor" behavior.
 This can be disabled, or the time delay to restore the cursor set, with
 `ultra-scroll-hide-cursor`.
 
-### `pixel-scroll-precision` interoperability
+## `pixel-scroll-precision` comparison and interoperability
 
-By design, `ultra-scroll` activates the builtin
-`pixel-scroll-precision-mode`, but remaps its scrolling function with
-its own. The latter also has the capability of *faking* smooth scrolling
-using interpolation. It can do this for non-mouse movements, like
-`scroll-up/down-command` (usually on `PgUp` / `PgDown`). To use these
-additional capabilities, simply set the relevant variables, like
-`pixel-scroll-precision-interpolate-page`, and they should "just work".
+Emacs has a built-in smooth scrolling system called
+`pixel-scroll-precision-mode`. In fact, by design, `ultra-scroll`
+*activates* the builtin `pixel-scroll-precision-mode`, remapping its
+scrolling function with its own. The latter also has the capability of
+*faking* smooth scrolling using interpolation. It can do this for
+non-mouse movements, like `scroll-up/down-command` (usually on `PgUp` /
+`PgDown`). To use these additional capabilities, simply set the relevant
+variables, like `pixel-scroll-precision-interpolate-page`, and they
+should "just work".
 
 Note that `ultra-scroll` disables `pixel-scroll-precision-use-momentum`,
 since it may not handle tall image scrolling well. Some systems (MacOS)
@@ -167,12 +158,25 @@ please open an issue to report your findings.
 > always disable `ultra-scroll-mode` first and then re-enable
 > `pixel-scroll-precision-mode`.
 
-> [!IMPORTANT]
-> Unlike `pixel-scroll-precision-mode`, `ultra-scroll` does not support
-> "faking" smooth pixel-level scrolling for mouse wheel movement on
-> systems that do not provide accurate data. You can determine if yours
-> does with `M-x ultra-scroll-check`. If not, it's recommended to stick
-> with `pixel-scroll-precision-mode`.
+### A comparison between ultra-scroll and pixel-scroll-precision
+
+`pixel-scroll-precision-mode`:
+
+- Supports smooth scrolling even on systems which do *not* provide pixel
+  scroll data, using interpolation (see
+  `pixel-scroll-precision-interpolate-mice`).
+- Can simulate a "momentum" scrolling phase on systems which do not
+  provide this capability (see `pixel-scroll-precision-use-momentum`).
+- Has occasional issues scrolling tall images.
+
+`ultra-scroll`:
+
+- Fully supports *only* those system and hardware combos that deliver
+  *real* pixel scroll data (see [Compatibility](#Compatibility)).
+- Provides "momentum" scrolling only on systems which provide this
+  themselves.
+- Is somewhat faster (see [Speed](#Speed)).
+- Handles tall image scrolling without issue.
 
 ## Related packages and functionality
 
