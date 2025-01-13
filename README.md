@@ -1,4 +1,4 @@
-# ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
+# ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
 
 `ultra-scroll`[^1] is a smooth-scrolling package for emacs, with native
 support for standard builds as well as
@@ -159,6 +159,9 @@ please open an issue to report your findings.
 > `pixel-scroll-precision-mode`.
 
 ### A comparison between ultra-scroll and pixel-scroll-precision
+
+See also [this
+question](#how-does-this-compare-to-the-built-in-smooth-scrolling).
 
 `pixel-scroll-precision-mode`:
 

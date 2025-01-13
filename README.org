@@ -97,6 +97,8 @@ Note that ~ultra-scroll~ disables ~pixel-scroll-precision-use-momentum~, since i
 
 *** A comparison between ultra-scroll and pixel-scroll-precision
 
+See also [[#how-does-this-compare-to-the-built-in-smooth-scrolling][this question]].
+
 ~pixel-scroll-precision-mode~:
 
 - Supports smooth scrolling even on systems which do /not/ provide pixel scroll data, using interpolation (see ~pixel-scroll-precision-interpolate-mice~).
