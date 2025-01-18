@@ -71,9 +71,26 @@ Operates only if `ultra-scroll-gc-percentage' is non-nil."
 (defcustom ultra-scroll-hide-cursor 0.25
   "Hide the cursor during scrolls after it reaches the window bounds.
 Time in sec after which to restore the cursor.  Set to nil to
-disable cursor hiding.  Note that `hl-line' highlights are also
-hidden, if active."
-  :type '(choice (const nil) float)
+disable cursor hiding.  Note that, if this is active, any
+additional functions or modes specified in
+`ultra-scroll-hide-functions' are also called."
+  :type '(choice (const :value nil :tag "Disable") (float :tag "Time (s)"))
+  :group 'scrolling)
+
+(defcustom ultra-scroll-hide-functions '(hl-line-mode)
+  "Functions to call when scrolling begins and ends.
+This hook can also be used to specify modes to disable
+temporarily during scrolling, and is only active if
+`ultra-scroll-hide-cursor' is non-nil.  Each function will be
+called with a single argument: -1 when scrolling starts, and 1
+when it ends (see `ultra-scroll-hide-cursor' for the timing of
+this).
+
+If a member of this hook is a symbol ending in \"-mode\", the
+associated mode function is only called if the symbol is bound
+and non-nil.  This is to facilitate including mode functions
+directly, toggling them only if they are already active."
+  :type 'hook
   :group 'scrolling)
 
 ;;;; Event callback/scroll
@@ -303,8 +320,8 @@ their PIXEL-DELTA values to see if they differ."
       (insert (format " ** %s scroll events%s detected in %0.2fs (%0.1f events/s)\n" cnt
 		      (if mac-basic " [Mac basic mouse]" "") tm (/ (float cnt) tm)))
       (if (cl-every (lambda (x) (= (abs x) (abs (car deltas)))) deltas)
-	  (insert (format " *** WARNING, all pixel scroll values == %0.2f No real pixel scroll data stream?\n"
-			  (car deltas))
+	  (insert (format " *** WARNING, all pixel scroll values == %0.2f " (car deltas))
+		  "No real pixel scroll data stream?\n"
 		  " ** (try again, or use pixel-scroll-precision instead)\n")
 	(let* ((deltas (mapcar #'abs deltas))
 	       (mean (/ (cl-reduce #'+ deltas ) max-cnt))
@@ -316,7 +333,7 @@ their PIXEL-DELTA values to see if they differ."
 
 (defvar-local ultra-scroll--hide-cursor-start nil)
 (defvar-local ultra-scroll--hide-cursor-timer nil)
-(defvar-local ultra-scroll--hide-cursor-undo nil)
+(defvar-local ultra-scroll--hide-cursor-undo-hook nil)
 
 (defun ultra-scroll--hide-cursor-undo (buf)
   "Undo cursor hiding in BUF."
@@ -328,10 +345,11 @@ their PIXEL-DELTA values to see if they differ."
       ;;   (with-selected-window win
       ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
       ;;     (beginning-of-line)))
-      (mapc #'funcall ultra-scroll--hide-cursor-undo)
+      ;; re-enable
+      (run-hook-with-args 'ultra-scroll--hide-cursor-undo-hook 1)
       (kill-local-variable 'ultra-scroll--hide-cursor-start)
       (kill-local-variable 'ultra-scroll--hide-cursor-timer)
-      (kill-local-variable 'ultra-scroll--hide-cursor-undo))))
+      (kill-local-variable 'ultra-scroll--hide-cursor-undo-hook))))
 
 (defun ultra-scroll--hide-cursor (window)
   "Hide cursor in WINDOW."
@@ -344,18 +362,24 @@ their PIXEL-DELTA values to see if they differ."
 	    (run-at-time ultra-scroll-hide-cursor nil
 			 #'ultra-scroll--hide-cursor-undo
 			 (window-buffer window))))
-    (unless (or ultra-scroll--hide-cursor-undo
-		(eq (window-point window) ;hide when window point reaches edge
+    (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
+		(eq (window-point window) ; not yet at window edge
 		    ultra-scroll--hide-cursor-start))
       (push (if (local-variable-p 'cursor-type)
                 (let ((orig cursor-type))
-                  (lambda () (setq-local cursor-type orig)))
-	      (lambda () (kill-local-variable 'cursor-type)))
-            ultra-scroll--hide-cursor-undo)
+                  (lambda (_v) (setq-local cursor-type orig)))
+	      (lambda (_v) (kill-local-variable 'cursor-type)))
+            ultra-scroll--hide-cursor-undo-hook)
       (setq-local cursor-type nil)
-      (when (bound-and-true-p hl-line-mode)
-        (push #'hl-line-mode ultra-scroll--hide-cursor-undo)
-        (hl-line-mode -1)))))
+      (run-hook-wrapped
+       'ultra-scroll-hide-functions
+       (lambda (fun)
+	 (when (or (not (symbolp fun))
+		   (not (string-suffix-p "-mode" (symbol-name fun)))
+		   (and (boundp fun) (symbol-value fun)))
+	   (push fun ultra-scroll--hide-cursor-undo-hook)
+	   (funcall fun -1)) 		; disable
+	 nil)))))
 
 ;;;; Mode
 ;;;###autoload
