@@ -126,12 +126,22 @@ temporarily increased, and reset during idle time. The defaults should
 work well for most situations, but if necessary, can be configured using
 `ultra-scroll-gc-percentage` and `ultra-scroll-gc-idle-time`.
 
-### Hiding cursor during scroll
+### Hiding cursor and disabling other modes during scroll
 
 By default, `ultra-scroll` hides the cursor (and a `hl-line` if active)
 once it reaches the window edge, to prevent "bouncing cursor" behavior.
 This can be disabled, or the time delay to restore the cursor set, with
 `ultra-scroll-hide-cursor`.
+
+In addition to the cursor, it is sometimes useful to temporarily disable
+other modes during the scroll. The special hook variable
+`ultra-scroll-hide-functions` can be used for this, e.g.:
+
+``` commonlisp
+(add-hook 'ultra-scroll-hide-functions 'hl-line-mode)
+```
+
+By default, the hook contains `hl-line-mode`.
 
 ## `pixel-scroll-precision` comparison and interoperability
 

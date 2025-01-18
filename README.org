@@ -81,9 +81,17 @@ Only certain systems provide real variable pixel scroll offset data (~PIXEL-DELT
 
 To reduce the likelihood of garbage collection during scroll, which can introduce slight pauses, the value of ~gc-cons-percentage~ is temporarily increased, and reset during idle time.  The defaults should work well for most situations, but if necessary, can be configured using ~ultra-scroll-gc-percentage~ and ~ultra-scroll-gc-idle-time~.
 
-*** Hiding cursor during scroll
+*** Hiding cursor and disabling other modes during scroll
 
-By default, ~ultra-scroll~ hides the cursor (and a ~hl-line~ if active) once it reaches the window edge, to prevent "bouncing cursor" behavior.  This can be disabled, or the time delay to restore the cursor set, with ~ultra-scroll-hide-cursor~. 
+By default, ~ultra-scroll~ hides the cursor (and a ~hl-line~ if active) once it reaches the window edge, to prevent "bouncing cursor" behavior.  This can be disabled, or the time delay to restore the cursor set, with ~ultra-scroll-hide-cursor~.
+
+In addition to the cursor, it is sometimes useful to temporarily disable other modes during the scroll.  The special hook variable ~ultra-scroll-hide-functions~ can be used for this, e.g.:
+
+#+begin_src emacs-lisp
+  (add-hook 'ultra-scroll-hide-functions 'hl-line-mode)
+#+end_src
+
+By default, the hook contains ~hl-line-mode~. 
 
 ** ~pixel-scroll-precision~ comparison and interoperability
 
