@@ -2,6 +2,11 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.3.1 (2025-01-18)
+
+- Add ~ultra-scroll-hide-functions~ hook, to support disabling/re-enabling arbitrary modes or calling other functions when scrolling starts/stops.
+- Doc improvements.
+
 * v0.3 (2025-01-12)
 
 - Hide cursor (and ~hl-line~) during scrolls by default.  See ~ultra-scroll-hide-cursor~.  Thanks to @minad; see #15.
