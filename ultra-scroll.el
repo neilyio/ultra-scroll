@@ -59,7 +59,7 @@ directly with those drivers instead."
   "Value to temporarily set `gc-cons-percentage'.
 This is set on initial scrolling, and restored during idle
 time (see `ultra-scroll-gc-idle-time')."
-  :type '(choice (const :tag "Disable" nil) float)
+  :type '(choice (const :value nil :tag "Disable") (float :tag "Fraction"))
   :group 'scrolling)
 
 (defcustom ultra-scroll-gc-idle-time 0.5
