@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.3.2 (2025-01-26)
+
+- Re-enable ~make-cursor-line-fully-visible~, which recent versions of ~pixel-scroll-precision-mode~ disable.
+
 * v0.3.1 (2025-01-18)
 
 - Add ~ultra-scroll-hide-functions~ hook, to support disabling/re-enabling arbitrary modes or calling other functions when scrolling starts/stops.
