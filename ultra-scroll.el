@@ -174,6 +174,7 @@ DELTA should be less than the window's height."
 	(or ultra-scroll--gc-percentage-orig 0.1)
 	ultra-scroll--gc-timer nil))
 
+(defvar-local ultra-scroll--hide-cursor-timer nil)
 (defsubst ultra-scroll--scroll (delta window)
   "Scroll WINDOW by DELTA pixels (positive or negative)."
   (let (ignore)
@@ -191,7 +192,7 @@ DELTA should be less than the window's height."
 	  ((beginning-of-buffer end-of-buffer)
 	   (let* ((end (eq (car err) 'end-of-buffer))
 		  (p (if end (point-max) (point-min))))
-	     (goto-char p)
+	     (when ultra-scroll--hide-cursor-timer (goto-char p))
 	     (set-window-start window p)
 	     (set-window-vscroll window 0 t t)
 	     (set-window-parameter window 'ultra-scroll--ignore
@@ -332,7 +333,6 @@ their PIXEL-DELTA values to see if they differ."
     (display-buffer buf)))
 
 (defvar-local ultra-scroll--hide-cursor-start nil)
-(defvar-local ultra-scroll--hide-cursor-timer nil)
 (defvar-local ultra-scroll--hide-cursor-undo-hook nil)
 
 (defun ultra-scroll--hide-cursor-undo (buf)
