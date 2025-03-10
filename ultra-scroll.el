@@ -175,6 +175,55 @@ DELTA should be less than the window's height."
 	ultra-scroll--gc-timer nil))
 
 (defvar-local ultra-scroll--hide-cursor-timer nil)
+(defvar-local ultra-scroll--hide-cursor-start nil)
+(defvar-local ultra-scroll--hide-cursor-undo-hook nil)
+
+(defun ultra-scroll--hide-cursor-undo (buf)
+  "Undo cursor hiding in BUF."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      ;; TODO It would be nice to recenter the point here,
+      ;; but this leads to problems with tall images.
+      ;; (when-let ((win (get-buffer-window buf)))
+      ;;   (with-selected-window win
+      ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
+      ;;     (beginning-of-line)))
+      ;; re-enable
+      (run-hook-with-args 'ultra-scroll--hide-cursor-undo-hook 1)
+      (kill-local-variable 'ultra-scroll--hide-cursor-start)
+      (kill-local-variable 'ultra-scroll--hide-cursor-timer)
+      (kill-local-variable 'ultra-scroll--hide-cursor-undo-hook))))
+
+(defun ultra-scroll--hide-cursor (window)
+  "Hide cursor in WINDOW."
+  (when ultra-scroll-hide-cursor
+    (if ultra-scroll--hide-cursor-timer
+	(timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
+			(timer-relative-time nil ultra-scroll-hide-cursor))
+      (setq ultra-scroll--hide-cursor-start (window-point window)
+            ultra-scroll--hide-cursor-timer
+	    (run-at-time ultra-scroll-hide-cursor nil
+			 #'ultra-scroll--hide-cursor-undo
+			 (window-buffer window))))
+    (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
+		(eq (window-point window) ; not yet at window edge
+		    ultra-scroll--hide-cursor-start))
+      (push (if (local-variable-p 'cursor-type)
+                (let ((orig cursor-type))
+                  (lambda (_v) (setq-local cursor-type orig)))
+	      (lambda (_v) (kill-local-variable 'cursor-type)))
+            ultra-scroll--hide-cursor-undo-hook)
+      (setq-local cursor-type nil)
+      (run-hook-wrapped
+       'ultra-scroll-hide-functions
+       (lambda (fun)
+	 (when (or (not (symbolp fun))
+		   (not (string-suffix-p "-mode" (symbol-name fun)))
+		   (and (boundp fun) (symbol-value fun)))
+	   (push fun ultra-scroll--hide-cursor-undo-hook)
+	   (funcall fun -1)) 		; disable
+	 nil)))))
+
 (defsubst ultra-scroll--scroll (delta window)
   "Scroll WINDOW by DELTA pixels (positive or negative)."
   (let (ignore)
@@ -192,7 +241,7 @@ DELTA should be less than the window's height."
 	  ((beginning-of-buffer end-of-buffer)
 	   (let* ((end (eq (car err) 'end-of-buffer))
 		  (p (if end (point-max) (point-min))))
-	     (when ultra-scroll--hide-cursor-timer (goto-char p))
+	     (when ultra-scroll--hide-cursor-undo-hook (goto-char p))
 	     (set-window-start window p)
 	     (set-window-vscroll window 0 t t)
 	     (set-window-parameter window 'ultra-scroll--ignore
@@ -331,55 +380,6 @@ their PIXEL-DELTA values to see if they differ."
 	  (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
 			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
     (display-buffer buf)))
-
-(defvar-local ultra-scroll--hide-cursor-start nil)
-(defvar-local ultra-scroll--hide-cursor-undo-hook nil)
-
-(defun ultra-scroll--hide-cursor-undo (buf)
-  "Undo cursor hiding in BUF."
-  (when (buffer-live-p buf)
-    (with-current-buffer buf
-      ;; TODO It would be nice to recenter the point here,
-      ;; but this leads to problems with tall images.
-      ;; (when-let ((win (get-buffer-window buf)))
-      ;;   (with-selected-window win
-      ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
-      ;;     (beginning-of-line)))
-      ;; re-enable
-      (run-hook-with-args 'ultra-scroll--hide-cursor-undo-hook 1)
-      (kill-local-variable 'ultra-scroll--hide-cursor-start)
-      (kill-local-variable 'ultra-scroll--hide-cursor-timer)
-      (kill-local-variable 'ultra-scroll--hide-cursor-undo-hook))))
-
-(defun ultra-scroll--hide-cursor (window)
-  "Hide cursor in WINDOW."
-  (when ultra-scroll-hide-cursor
-    (if ultra-scroll--hide-cursor-timer
-	(timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
-			(timer-relative-time nil ultra-scroll-hide-cursor))
-      (setq ultra-scroll--hide-cursor-start (window-point window)
-            ultra-scroll--hide-cursor-timer
-	    (run-at-time ultra-scroll-hide-cursor nil
-			 #'ultra-scroll--hide-cursor-undo
-			 (window-buffer window))))
-    (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
-		(eq (window-point window) ; not yet at window edge
-		    ultra-scroll--hide-cursor-start))
-      (push (if (local-variable-p 'cursor-type)
-                (let ((orig cursor-type))
-                  (lambda (_v) (setq-local cursor-type orig)))
-	      (lambda (_v) (kill-local-variable 'cursor-type)))
-            ultra-scroll--hide-cursor-undo-hook)
-      (setq-local cursor-type nil)
-      (run-hook-wrapped
-       'ultra-scroll-hide-functions
-       (lambda (fun)
-	 (when (or (not (symbolp fun))
-		   (not (string-suffix-p "-mode" (symbol-name fun)))
-		   (and (boundp fun) (symbol-value fun)))
-	   (push fun ultra-scroll--hide-cursor-undo-hook)
-	   (funcall fun -1)) 		; disable
-	 nil)))))
 
 ;;;; Mode
 ;;;###autoload
