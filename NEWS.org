@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.3.3 (2025-03-11)
+
+- Do not move point to ~point-min/max~ when scroll reaches buffer beginning/end, unless the cursor has been hidden.
+
 * v0.3.2 (2025-01-26)
 
 - Re-enable ~make-cursor-line-fully-visible~, which recent versions of ~pixel-scroll-precision-mode~ disable.
