@@ -166,12 +166,12 @@ DELTA should be less than the window's height."
 			(save-excursion
 			  (end-of-visual-line)
 			  (1- (point)))))) ; don't fall off
-	  (when-let ((pv (pos-visible-in-window-p end nil t))
+	  (when-let* ((pv (pos-visible-in-window-p end nil t))
 		     ((and (> (length pv) 2) ; falls outside window
 			   (zerop (nth 2 pv))))) ; but not at the top
 	    (goto-char end) ; eol is usually full height
 	    (goto-char start))) ; now move up
-      (when-let ((p (posn-at-x-y 0 (1- win-height))))
+      (when-let* ((p (posn-at-x-y 0 (1- win-height))))
 	(goto-char (posn-point p))
 	(vertical-motion -1)
 	(if (< initial (point)) (goto-char initial))))))
@@ -194,7 +194,7 @@ DELTA should be less than the window's height."
     (with-current-buffer buf
       ;; TODO It would be nice to recenter the point here,
       ;; but this leads to problems with tall images.
-      ;; (when-let ((win (get-buffer-window buf)))
+      ;; (when-let* ((win (get-buffer-window buf)))
       ;;   (with-selected-window win
       ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
       ;;     (beginning-of-line)))
@@ -357,14 +357,14 @@ their PIXEL-DELTA values to see if they differ."
 	    (let ((plist (nth 3 ev)))
 	      (when (null plist)
 		(error "Malformed wheel event detected! %s" ev))
-	      (if-let ((sdy (plist-get plist :scrolling-delta-y)))
+	      (if-let* ((sdy (plist-get plist :scrolling-delta-y)))
 		  (push sdy deltas)
-		(if-let ((dy (plist-get plist :delta-y)))
+		(if-let* ((dy (plist-get plist :delta-y)))
 		    (progn
 		      (push dy deltas)
 		      (setq mac-basic t))
 		  (error "Malformed wheel event detected!  %s" ev))))
-	  (if-let ((pix-delta (nth 4 ev)))
+	  (if-let* ((pix-delta (nth 4 ev)))
 	      (push (cdr pix-delta) deltas)
 	    (error "Malformed wheel event detected!  %s" ev)))))
     (setq tm (float-time (time-since tm)))
