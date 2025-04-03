@@ -99,25 +99,35 @@ directly, toggling them only if they are already active."
 DELTA should not be larger than the height of the current window."
   (let* ((initial (point))
 	 (edges (window-edges nil t nil t))
+	 (win-height (- (nth 3 edges) (nth 1 edges)))
 	 (current-vs (window-vscroll nil t))
 	 (off (+ (window-tab-line-height) (window-header-line-height)))
-         (new-start (or (posn-point (posn-at-x-y 0 (+ delta off))) (window-start))))
-    (goto-char new-start)
-    (unless (zerop (window-hscroll))
-      (setq new-start (beginning-of-visual-line)))
-    (if (>= (line-pixel-height) (- (nth 3 edges) (nth 1 edges)))
-	;; Jumbo line at top: just stay on it and increment vscroll
-	(set-window-vscroll nil (+ current-vs delta) t t)
-      (if (eq new-start (window-start))	; same start: just vscroll a bit more
-	  (setq delta (+ current-vs delta))
-	(setq delta (- delta (cdr (posn-x-y (posn-at-point new-start)))))
-	(set-window-start nil new-start (not (zerop delta))))
-      (set-window-vscroll nil delta t t)
-      ;; Avoid recentering
-      (goto-char (posn-point (posn-at-x-y 0 off))) ; window-start may be above
-      (if (zerop (vertical-motion 1))	; move down 1 line from top
-	  (signal 'end-of-buffer nil))
-      (if (> initial (point)) (goto-char initial)))))
+         (new-start (posn-point (posn-at-x-y 0 (+ delta off))))
+	 (new-start-posn (and new-start (posn-at-point new-start))))
+    (unless new-start-posn ; scroll delta could be larger than win height!
+      (while (> delta (- win-height off))
+	(setq new-start (posn-point (posn-at-x-y 0 (1- win-height)))
+	      new-start-posn (posn-at-point new-start))
+	(setq delta (- delta (cdr (posn-x-y new-start-posn))))
+	(set-window-start nil new-start)))
+    (when new-start
+      (goto-char new-start)
+      (unless (zerop (window-hscroll))
+	(setq new-start (beginning-of-visual-line)))
+      (if (>= (line-pixel-height) win-height)
+	  ;; Jumbo line at top: just stay on it and increment vscroll
+	  (set-window-vscroll nil (+ current-vs delta) t t)
+	(if (eq new-start (window-start)) ; same start: just vscroll a bit more
+	    (setq delta (+ current-vs delta))
+	  (setq new-start-posn (posn-at-point new-start)
+		delta (- delta (cdr (posn-x-y new-start-posn))))
+	  (set-window-start nil new-start (not (zerop delta))))
+	(set-window-vscroll nil delta t t)
+	;; Avoid recentering
+	(goto-char (posn-point (posn-at-x-y 0 off))) ; window-start may be above
+	(if (zerop (vertical-motion 1))	; move down 1 line from top
+	    (signal 'end-of-buffer nil))
+	(if (> initial (point)) (goto-char initial))))))
 
 (defun ultra-scroll-up (delta)
   "Scroll the current window up by DELTA pixels.
