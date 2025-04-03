@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.3.4 (2024-04-02)
+
+- Correctly handle very large scroll-down deltas, which may occur for ultra-fast mice wheels with short windows.
+
 * v0.3.3 (2025-03-11)
 
 - Do not move point to ~point-min/max~ when scroll reaches buffer beginning/end, unless the cursor has been hidden.
