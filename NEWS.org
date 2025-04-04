@@ -2,7 +2,7 @@
 #+author: J.D. Smith
 #+language: en
 
-* v0.3.4 (2024-04-02)
+* v0.3.4 (2025-04-02)
 
 - Correctly handle very large scroll-down deltas, which may occur for ultra-fast mice wheels with short windows.
 
