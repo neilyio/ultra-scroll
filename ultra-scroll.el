@@ -105,11 +105,15 @@ DELTA should not be larger than the height of the current window."
          (new-start (posn-point (posn-at-x-y 0 (+ delta off))))
 	 (new-start-posn (and new-start (posn-at-point new-start))))
     (unless new-start-posn ; scroll delta could be larger than win height!
-      (while (> delta (- win-height off))
-	(setq new-start (posn-point (posn-at-x-y 0 (1- win-height)))
-	      new-start-posn (posn-at-point new-start))
-	(setq delta (- delta (cdr (posn-x-y new-start-posn))))
-	(set-window-start nil new-start)))
+      (let ((last-start (or new-start 0)) quit)
+	(while (and (> delta (- win-height off)) (not quit))
+	  (setq new-start (posn-point (posn-at-x-y 0 (1- win-height))))
+	  (if (<= new-start last-start)
+	      (setq quit t) ; no progress being made
+	    (setq new-start-posn (posn-at-point new-start)
+		  last-start new-start
+		  delta (- delta (cdr (posn-x-y new-start-posn))))
+	    (set-window-start nil new-start)))))
     (when new-start
       (goto-char new-start)
       (unless (zerop (window-hscroll))
