@@ -2,9 +2,9 @@
 ;; Copyright (C) 2023-2025  J.D. Smith
 
 ;; Author: J.D. Smith
-;; Homepage: https://github.com/jdtsmith/ultra-scroll
+;; URL: https://github.com/jdtsmith/ultra-scroll
 ;; Package-Requires: ((emacs "29.1"))
-;; Version: 0.3.4
+;; Version: 0.3.5
 ;; Keywords: convenience
 ;; Prefix: ultra-scroll
 ;; Separator: -

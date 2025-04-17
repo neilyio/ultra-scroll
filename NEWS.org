@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.3.5 (2024-04-17)
+
+- Fix freeze when scrolling down /very/ short windows like few-line child frame tooltips (#30).
+  
 * v0.3.4 (2025-04-02)
 
 - Correctly handle very large scroll-down deltas, which may occur for ultra-fast mice wheels with short windows.
