@@ -235,7 +235,7 @@ Hence: molasses.
 
 I also wanted to be able to scroll through image-rich documents without
 worrying about jumpy/loopy scrolling behavior. And my extra dumb mouse
-didn't work well either: small scrolls did nothing: you'd have scroll
+didn't work well either: small scrolls did nothing: you'd have to scroll
 pretty aggressively to get any movement at all.
 
 How hard could it be to fix this? And the adventure began…
