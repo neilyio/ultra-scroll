@@ -2,7 +2,12 @@
 #+author: J.D. Smith
 #+language: en
 
-* v0.3.5 (2024-04-17)
+* v0.4 (2025-05-05)
+
+- Support ~scroll-conservatively~ < 100, altering the value temporarily during scroll.  Note that ~scroll-margin~ = 0 is still required.
+- Do not rely on ~:phase~ information from the mouse events, since only certain hardware on mac provides it.
+
+* v0.3.5 (2025-04-17)
 
 - Fix freeze when scrolling down /very/ short windows like few-line child frame tooltips (#30).
   
@@ -36,7 +41,7 @@
 
 * v0.2.1 (2025-01-09)
 
-- Introduce ~ultra-scroll-check~, to provide a means for users to check their wheel event stream for real pixel delta scroll data.    
+- Introduce ~ultra-scroll-check~, to provide a means for users to check their wheel event stream to determine the character of their pixel delta scroll data.    
 
 * v0.2 (2025-01-08)
 

@@ -53,8 +53,8 @@ move to the final paren, and =C-x C-e=.  For Emacs 30, you can use the new ~:vc~
     ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
     ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
     :init
-    (setq scroll-conservatively 101 ; important!
-          scroll-margin 0) 
+    (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
+          scroll-margin 0)        ; important: scroll-marging>0 not yet supported
     :config
     (ultra-scroll-mode 1))
 #+end_src
@@ -173,8 +173,8 @@ As a result of these types of difficulties, pixel scrolling codes and packages a
 
 For posterity, some things I discovered in my own mostly-victorious battle against unwanted re-centering during smooth scroll, including across jumbo lines:
 
-- ~scroll-conservatively=101~ is very helpful, since with this Emacs will "scroll just enough text to bring point into view, even if you move far away".  It does not defeat re-centering, but makes it... more manageable.
-- You cannot let-bind ~scroll-conservatively~ for effect, as it comes into play only on re-display (after your event handler returns).
+- ~scroll-conservatively=101~ is very helpful, since with this Emacs will "scroll just enough text to bring point into view, even if you move far away".  It does not defeat re-centering, but makes it... more manageable.  
+- You cannot let-bind ~scroll-conservatively~ for effect, as it comes into play only on re-display (after your event handler returns).  But you /can/ set it temporarily and restore it in idle time without ill effect.
 - ~scroll-margin>0~ is a no-no.  This setting always moves point at least that many lines from the window boundaries, which, unless you can reliably place point there during the scroll (even in the presence of jumbo lines; see below), will cause loop-back.  See #3.
 - Virtual Scroll:
   + ~vscroll~ -- a virtual rendered scrolling window hiding /below/ the current window -- is key to smooth scrolling, and altering ~vscroll~ to move the view-port is incredibly fast.
@@ -193,7 +193,7 @@ For posterity, some things I discovered in my own mostly-victorious battle again
     * This is /not/ true for lines that are shorter than the usable window height. In this case, you must /avoid/ placing point on any line which falls partially out of view.
   + Scrolling towards buffer start:
     * When scrolling up past jumbo lines towards the buffer's start using ~set-window-start~ (lines of content move down), you must keep point on the jumbo, but /only until it clears the top of the window area/ (even by one pixel).
-    * After this, you must move the point to the line above it (and had better insist that ~scroll-conservatively>0~ to prevent re-centering).
+    * After this, you must move the point to the line above it (and had better insist that ~scroll-conservatively>0~ during the scroll to prevent re-centering).
     * In some cases (depending on truncation/visual-line-mode/etc.), this movement must occur from a position beyond the first full height object (which may not be at the line's start). E.g. one before the visual line end.
 - ~pos-visible-in-window~ doesn't always give correct results near the window boundaries.  Better to use the first line at the window's top or directly identify the final line (both via ~pos-at-x-y~) and adjust from there.
 - Display bugs

@@ -86,8 +86,8 @@ new `:vc` keyword. Configuration is then simple:
   ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
   ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
   :init
-  (setq scroll-conservatively 101 ; important!
-        scroll-margin 0) 
+  (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
+        scroll-margin 0)        ; important: scroll-marging>0 not yet supported
   :config
   (ultra-scroll-mode 1))
 ```
@@ -313,7 +313,9 @@ across jumbo lines:
   move far away". It does not defeat re-centering, but makes it… more
   manageable.
 - You cannot let-bind `scroll-conservatively` for effect, as it comes
-  into play only on re-display (after your event handler returns).
+  into play only on re-display (after your event handler returns). But
+  you *can* set it temporarily and restore it in idle time without ill
+  effect.
 - `scroll-margin>0` is a no-no. This setting always moves point at least
   that many lines from the window boundaries, which, unless you can
   reliably place point there during the scroll (even in the presence of
@@ -358,8 +360,8 @@ across jumbo lines:
       keep point on the jumbo, but *only until it clears the top of the
       window area* (even by one pixel).
     - After this, you must move the point to the line above it (and had
-      better insist that `scroll-conservatively>0` to prevent
-      re-centering).
+      better insist that `scroll-conservatively>0` during the scroll to
+      prevent re-centering).
     - In some cases (depending on truncation/visual-line-mode/etc.),
       this movement must occur from a position beyond the first full
       height object (which may not be at the line's start). E.g. one
