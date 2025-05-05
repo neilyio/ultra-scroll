@@ -58,15 +58,16 @@ directly with those drivers instead."
 (defcustom ultra-scroll-gc-percentage 0.67
   "Value to temporarily set `gc-cons-percentage'.
 This is set on initial scrolling, and restored during idle
-time (see `ultra-scroll-gc-idle-time')."
+time (see `ultra-scroll-idle-time')."
   :type '(choice (const :value nil :tag "Disable") (float :tag "Fraction"))
   :group 'scrolling)
 
-(defcustom ultra-scroll-gc-idle-time 0.5
-  "Idle time in sec after which to restore `gc-cons-percentage'.
-Operates only if `ultra-scroll-gc-percentage' is non-nil."
+(defcustom ultra-scroll-idle-time 0.5
+  "Idle time in sec after which to restore GC and scroll parameters.
+GC percentage is restored only if `ultra-scroll-gc-percentage' is non-nil."
   :type 'float
   :group 'scrolling)
+(make-obsolete-variable 'ultra-scroll-gc-idle-time 'ultra-scroll-idle-time "0.4")
 
 (defcustom ultra-scroll-hide-cursor 0.25
   "Hide the cursor during scrolls after it reaches the window bounds.
@@ -93,7 +94,88 @@ directly, toggling them only if they are already active."
   :type 'hook
   :group 'scrolling)
 
-;;;; Event callback/scroll
+;;;; Cursor Hiding
+(defvar-local ultra-scroll--hide-cursor-timer nil)
+(defvar-local ultra-scroll--hide-cursor-start nil)
+(defvar-local ultra-scroll--hide-cursor-undo-hook nil)
+(defun ultra-scroll--hide-cursor-undo (buf)
+  "Undo cursor hiding in BUF."
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      ;; TODO It would be nice to recenter the point here,
+      ;; but this leads to problems with tall images.
+      ;; (when-let* ((win (get-buffer-window buf)))
+      ;;   (with-selected-window win
+      ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
+      ;;     (beginning-of-line)))
+      ;; re-enable
+      (run-hook-with-args 'ultra-scroll--hide-cursor-undo-hook 1)
+      (kill-local-variable 'ultra-scroll--hide-cursor-start)
+      (kill-local-variable 'ultra-scroll--hide-cursor-timer)
+      (kill-local-variable 'ultra-scroll--hide-cursor-undo-hook))))
+
+(defun ultra-scroll--hide-cursor (window)
+  "Hide cursor in WINDOW."
+  (when ultra-scroll-hide-cursor
+    (if ultra-scroll--hide-cursor-timer
+	(timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
+			(timer-relative-time nil ultra-scroll-hide-cursor))
+      (setq ultra-scroll--hide-cursor-start (window-point window)
+            ultra-scroll--hide-cursor-timer
+	    (run-at-time ultra-scroll-hide-cursor nil
+			 #'ultra-scroll--hide-cursor-undo
+			 (window-buffer window))))
+    (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
+		(eq (window-point window) ; not yet at window edge
+		    ultra-scroll--hide-cursor-start))
+      (push (if (local-variable-p 'cursor-type)
+                (let ((orig cursor-type))
+                  (lambda (_v) (setq-local cursor-type orig)))
+	      (lambda (_v) (kill-local-variable 'cursor-type)))
+            ultra-scroll--hide-cursor-undo-hook)
+      (setq-local cursor-type nil)
+      (run-hook-wrapped
+       'ultra-scroll-hide-functions
+       (lambda (fun)
+	 (when (or (not (symbolp fun))
+		   (not (string-suffix-p "-mode" (symbol-name fun)))
+		   (and (boundp fun) (symbol-value fun)))
+	   (push fun ultra-scroll--hide-cursor-undo-hook)
+	   (funcall fun -1)) 		; disable
+	 nil)))))
+
+;;;; Other scroll begin/end actions
+(defvar ultra-scroll--gc-percentage-orig nil)
+(defvar ultra-scroll--scroll-conservatively-orig nil)
+(defvar ultra-scroll--timer nil)
+(defun ultra-scroll--end-scroll ()
+  "Reset GC variable and scroll settings during idle time."
+  (when ultra-scroll--gc-percentage-orig
+    (setq gc-cons-percentage ultra-scroll--gc-percentage-orig))
+  (when ultra-scroll--scroll-conservatively-orig
+    (setq scroll-conservatively ultra-scroll--scroll-conservatively-orig))
+  (setq ultra-scroll--timer nil))
+
+(defsubst ultra-scroll--prepare-to-scroll ()
+  "Prepare to scroll by lifting GC percentage and setting scroll parameters.
+See `ultra-scroll-gc-percentage' to configuring whether GC changes occur
+and the `gc-cons-percentage' level to set temporarily."
+  (unless ultra-scroll--timer
+    (let (changed)
+      (when ultra-scroll-gc-percentage
+	(setq changed t
+	      gc-cons-percentage	; reduce GC's during scroll
+	      (max gc-cons-percentage ultra-scroll-gc-percentage)))
+      (when (< scroll-conservatively 100)
+	(setq changed t
+	      ultra-scroll--scroll-conservatively-orig scroll-conservatively
+	      scroll-conservatively 101))
+      (when changed
+	(setq ultra-scroll--timer
+	      (run-with-idle-timer ultra-scroll-idle-time nil
+				   #'ultra-scroll--end-scroll))))))
+
+;;;; Scroll
 (defun ultra-scroll-down (delta)
   "Scroll the current window down by DELTA pixels.
 DELTA should not be larger than the height of the current window."
@@ -109,7 +191,7 @@ DELTA should not be larger than the height of the current window."
 	(while (and (> delta (- win-height off)) (not quit))
 	  (setq new-start (posn-point (posn-at-x-y 0 (1- win-height))))
 	  (if (<= new-start last-start)
-	      (setq quit t) ; no progress being made
+	      (setq quit t)		; no progress being made
 	    (setq new-start-posn (posn-at-point new-start)
 		  last-start new-start
 		  delta (- delta (cdr (posn-x-y new-start-posn))))
@@ -180,64 +262,6 @@ DELTA should be less than the window's height."
 	(vertical-motion -1)
 	(if (< initial (point)) (goto-char initial))))))
 
-(defvar ultra-scroll--gc-percentage-orig nil)
-(defvar ultra-scroll--gc-timer nil)
-(defun ultra-scroll--restore-gc ()
-  "Reset GC variable during idle time."
-  (setq gc-cons-percentage
-	(or ultra-scroll--gc-percentage-orig 0.1)
-	ultra-scroll--gc-timer nil))
-
-(defvar-local ultra-scroll--hide-cursor-timer nil)
-(defvar-local ultra-scroll--hide-cursor-start nil)
-(defvar-local ultra-scroll--hide-cursor-undo-hook nil)
-
-(defun ultra-scroll--hide-cursor-undo (buf)
-  "Undo cursor hiding in BUF."
-  (when (buffer-live-p buf)
-    (with-current-buffer buf
-      ;; TODO It would be nice to recenter the point here,
-      ;; but this leads to problems with tall images.
-      ;; (when-let* ((win (get-buffer-window buf)))
-      ;;   (with-selected-window win
-      ;;     (goto-char (/ (+ (window-start) (window-end nil t)) 2))
-      ;;     (beginning-of-line)))
-      ;; re-enable
-      (run-hook-with-args 'ultra-scroll--hide-cursor-undo-hook 1)
-      (kill-local-variable 'ultra-scroll--hide-cursor-start)
-      (kill-local-variable 'ultra-scroll--hide-cursor-timer)
-      (kill-local-variable 'ultra-scroll--hide-cursor-undo-hook))))
-
-(defun ultra-scroll--hide-cursor (window)
-  "Hide cursor in WINDOW."
-  (when ultra-scroll-hide-cursor
-    (if ultra-scroll--hide-cursor-timer
-	(timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
-			(timer-relative-time nil ultra-scroll-hide-cursor))
-      (setq ultra-scroll--hide-cursor-start (window-point window)
-            ultra-scroll--hide-cursor-timer
-	    (run-at-time ultra-scroll-hide-cursor nil
-			 #'ultra-scroll--hide-cursor-undo
-			 (window-buffer window))))
-    (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
-		(eq (window-point window) ; not yet at window edge
-		    ultra-scroll--hide-cursor-start))
-      (push (if (local-variable-p 'cursor-type)
-                (let ((orig cursor-type))
-                  (lambda (_v) (setq-local cursor-type orig)))
-	      (lambda (_v) (kill-local-variable 'cursor-type)))
-            ultra-scroll--hide-cursor-undo-hook)
-      (setq-local cursor-type nil)
-      (run-hook-wrapped
-       'ultra-scroll-hide-functions
-       (lambda (fun)
-	 (when (or (not (symbolp fun))
-		   (not (string-suffix-p "-mode" (symbol-name fun)))
-		   (and (boundp fun) (symbol-value fun)))
-	   (push fun ultra-scroll--hide-cursor-undo-hook)
-	   (funcall fun -1)) 		; disable
-	 nil)))))
-
 (defsubst ultra-scroll--scroll (delta window)
   "Scroll WINDOW by DELTA pixels (positive or negative)."
   (let (ignore)
@@ -264,17 +288,6 @@ DELTA should be less than the window's height."
 		       (if end '(end-of-buffer) '(beginning-of-buffer)))))))
         (ultra-scroll--hide-cursor window)))))
 
-(defsubst ultra-scroll--maybe-relax-gc ()
-  "Lift the GC threshold percentage to avoid GC during scroll.
-See `ultra-scroll-gc-percentage' to configuring whether this
-occurs and the `gc-cons-percentage' level to set temporarily."
-  (when (and ultra-scroll-gc-percentage (not ultra-scroll--gc-timer))
-    (setq gc-cons-percentage		; reduce GC's during scroll
-	  (max gc-cons-percentage ultra-scroll-gc-percentage)
-	  ultra-scroll--gc-timer
-	  (run-with-idle-timer ultra-scroll-gc-idle-time nil
-			       #'ultra-scroll--restore-gc))))
-
 (defun ultra-scroll (event &optional arg)
   "Smooth scroll EVENT.
 EVENT and optional ARG are passed to `mwheel-scroll', unless
@@ -283,7 +296,7 @@ EVENT is a scrolling event."
   (let ((delta (nth 4 event)))
     (if (not delta)
 	(mwheel-scroll event arg)
-      (ultra-scroll--maybe-relax-gc)
+      (ultra-scroll--prepare-to-scroll)
       (ultra-scroll--scroll (round (cdr delta)) (mwheel-event-window event)))))
 
 (declare-function mac-forward-wheel-event "mac-win")
@@ -338,6 +351,7 @@ will be replayed for left/right touch ends."
 (put 'ultra-scroll 'scroll-command t)
 (put 'ultra-scroll-mac 'scroll-command t)
 
+;;;; Testing scroll data
 (defun ultra-scroll-check (event-cnt)
   "Check and report on the scrolling event data your system provides.
 This reads EVENT-CNT independent scroll events (default: 30) and checks
@@ -429,7 +443,8 @@ your system and hardware provide."
     (setq pixel-scroll-precision-use-momentum nil)
     ;; pixel-scroll-precision after emacs v30 turns this off, but we don't need to
     (setq-default make-cursor-line-fully-visible t)
-    (setq ultra-scroll--gc-percentage-orig gc-cons-percentage))
+    (setq ultra-scroll--gc-percentage-orig gc-cons-percentage
+	  ultra-scroll--scroll-conservatively-orig scroll-conservatively))
    (t
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision] nil)
     (setq pixel-scroll-precision-use-momentum
