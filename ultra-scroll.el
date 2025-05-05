@@ -338,8 +338,7 @@ will be replayed for left/right touch ends."
       ;;        fractional line scroll amounts.
       ;;      - `:phase' is set to `began' on first scroll, then `changed'.
       ;;      - `:momentum-phase' is always `none'.
-      (when (eq (plist-get plist :phase) 'began)
-	(ultra-scroll--maybe-relax-gc))
+      (ultra-scroll--prepare-to-scroll)
       (let* ((scroll-delta (plist-get plist :scrolling-delta-y))
 	     (delta (or scroll-delta
 			;; regular non-touch scroll: fraction of a line
