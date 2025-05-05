@@ -87,7 +87,7 @@ new `:vc` keyword. Configuration is then simple:
   ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
   :init
   (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
-        scroll-margin 0)        ; important: scroll-marging>0 not yet supported
+        scroll-margin 0)        ; important: scroll-margin>0 not yet supported
   :config
   (ultra-scroll-mode 1))
 ```
@@ -235,7 +235,7 @@ Hence: molasses.
 
 I also wanted to be able to scroll through image-rich documents without
 worrying about jumpy/loopy scrolling behavior. And my extra dumb mouse
-didn't work well either: small scrolls did nothing: you'd have to scroll
+didn't work well either: small scrolls did nothing: you'd have scroll
 pretty aggressively to get any movement at all.
 
 How hard could it be to fix this? And the adventure began…

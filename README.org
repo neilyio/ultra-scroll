@@ -54,7 +54,7 @@ move to the final paren, and =C-x C-e=.  For Emacs 30, you can use the new ~:vc~
     ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
     :init
     (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
-          scroll-margin 0)        ; important: scroll-marging>0 not yet supported
+          scroll-margin 0)        ; important: scroll-margin>0 not yet supported
     :config
     (ultra-scroll-mode 1))
 #+end_src
