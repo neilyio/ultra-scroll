@@ -161,6 +161,9 @@ directly, toggling them only if they are already active."
 See `ultra-scroll-gc-percentage' to configuring whether GC changes occur
 and the `gc-cons-percentage' level to set temporarily."
   (unless ultra-scroll--timer
+    ;; Work around lag when same buffer has vscroll in another window (#32)
+    (dolist (w (cdr (get-buffer-window-list (current-buffer))))
+      (set-window-vscroll w 0))
     (let (changed)
       (when ultra-scroll-gc-percentage
 	(setq changed t
