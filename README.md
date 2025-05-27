@@ -83,7 +83,7 @@ new `:vc` keyword. Configuration is then simple:
 
 ``` commonlisp
 (use-package ultra-scroll
-  ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
+  ;:load-path "~/code/emacs/ultra-scroll" ; if you git cloned
   ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
   :init
   (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
