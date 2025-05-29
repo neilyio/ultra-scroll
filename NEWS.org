@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* DEVELOPMENT
+
+- Work around redisplay bugs when the cursor is partially visible, which can lead to ~redisplay~ slowdowns of 150-500x.
+
 * v0.4 (2025-05-05)
 
 - Support ~scroll-conservatively~ < 100, altering the value temporarily during scroll.  Note that ~scroll-margin~ = 0 is still required.
