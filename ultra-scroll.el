@@ -443,8 +443,10 @@ your system and hardware provide."
     (setf (get 'pixel-scroll-precision-use-momentum 'us-orig-value)
 	  pixel-scroll-precision-use-momentum)
     (setq pixel-scroll-precision-use-momentum nil)
-    ;; pixel-scroll-precision after emacs v30 turns this off, but we don't need to
-    (setq-default make-cursor-line-fully-visible t)
+    ;; pixel-scroll-precision after emacs v30 turns this off.  We
+    ;; don't need to do so for scrolling, but a bug in half-visible
+    ;; cursors lead to 150-400x slowdown in redisplay; see #32.
+    (setq-default make-cursor-line-fully-visible nil)
     (setq ultra-scroll--gc-percentage-orig gc-cons-percentage
 	  ultra-scroll--scroll-conservatively-orig scroll-conservatively))
    (t
