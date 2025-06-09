@@ -196,7 +196,7 @@ DELTA should not be larger than the height of the current window."
 	      (setq quit t)		; no progress being made
 	    (setq new-start-posn (posn-at-point new-start)
 		  last-start new-start
-		  delta (- delta (cdr (posn-x-y new-start-posn))))
+		  delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
 	    (set-window-start nil new-start)))))
     (when new-start
       (goto-char new-start)
@@ -208,7 +208,7 @@ DELTA should not be larger than the height of the current window."
 	(if (eq new-start (window-start)) ; same start: just vscroll a bit more
 	    (setq delta (+ current-vs delta))
 	  (setq new-start-posn (posn-at-point new-start)
-		delta (- delta (cdr (posn-x-y new-start-posn))))
+		delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
 	  (set-window-start nil new-start (not (zerop delta))))
 	(set-window-vscroll nil delta t t)
 	;; Avoid recentering
