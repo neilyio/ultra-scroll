@@ -378,26 +378,17 @@ are many more corner cases, but the current design gets most things
 right in my usage.
 
 ## Display bugs
-`ultra-scroll` exercises some rare corner cases of Emacs' redisplay logic, and as a result has revealed a number of display bugs, which are mentioned here.
+`ultra-scroll` exercises some rare corner cases of Emacs' redisplay logic, and as a result has revealed and helped fix a number of display bugs.  These bugs lead to behaviors like slightly staccato scrolling in buffers with diverse line heights (e.g. inline images).  If you think you have found a display bug, open an issue to discuss.
 
-  - There are
-    [display](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
-    [bugs](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) with
-    inline images that cause them to misreport pixel measurements and
-    positions sometimes.
-  - These lead to slightly staccato scrolling in such buffers and
-    `height=0` gets erroneously reported, so can't be used to find
-    beginning of buffer.
-
-**Update:** 
-
-  - Two display bugs have been fixed in master as of Dec,
+  - A [display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
+    with inline images that cause them to misreport pixel measurements and
+    positions sometimes has been fixed in master as of Dec,
     2023, so scrolling with lots of inline images should be much
-    smoother. 
-  - As of June, 2025, [an additional display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
-    line-skipping visual (i.e. word) wrapped lines with images at line start
-    has been fixed (for Emacs v31).  This caused additional "hitches" in smooth scrolling with inline images.
-  - Another new display bug related to a slowdown in some situations with `make-cursor-line-fully-visible=t` (#32) was also [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766).
+    smoother from v30. 
+  - As of June, 2025, another [display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
+    line-skipping of visual (i.e. word) wrapped lines with inline images at line start
+    has been fixed (for Emacs v31).  This caused additional "hitches" in smooth scrolling for numerous inline images.
+  - Another display bug which lead to scrolling (and general UI) slowdown in some situations with `make-cursor-line-fully-visible=t` (#32) was also found and [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766).
 
 ## Speed
 
