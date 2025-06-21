@@ -247,7 +247,7 @@ DELTA should be less than the window's height."
     ;; carefully.  Once they are within the window, point should stay
     ;; on the first tall object on the line until the top of the jumbo
     ;; line clears the top of the window, then immediately moved off
-    ;; (above), via the full height character.  The is the only way to
+    ;; (above), via the full height character.  This is the only way to
     ;; avoid unwanted re-centering/motion trapping.
     (if (> (line-pixel-height) win-height) ; a jumbo on the line!
 	(let ((end (max (point)
