@@ -50,7 +50,7 @@ move to the final paren, and =C-x C-e=.  For Emacs 30, you can use the new ~:vc~
 
 #+begin_src emacs-lisp
   (use-package ultra-scroll
-    ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
+    ;:load-path "~/code/emacs/ultra-scroll" ; if you git cloned
     ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
     :init
     (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
@@ -202,6 +202,13 @@ For posterity, some things I discovered in my own mostly-victorious battle again
   + *Update:* Two display bugs have been fixed in master as of Dec, 2023, so scrolling with lots of inline images will soon be even smoother.  [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604][One bug]] related to motion skipping visual-wrapped lines with images at line start remains. 
 
 So all in all, it's quite complicated to get something that works as you'd hope.  The cutting room floor is littered with literally dozens of almost-but-not-quite-working versions of ~ultra-scroll~.  I'm sure there are many more corner cases, but the current design gets most things right in my usage.
+
+** Display bugs
+~ultra-scroll~ exercises some rare corner cases of Emacs' redisplay logic, and as a result has revealed and helped fix a number of display bugs.  These bugs lead to behaviors like slightly staccato scrolling in buffers with diverse line heights (e.g. inline images).  If you think you have found a display bug, open an issue to discuss.
+
+  - A [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533][display bug]] with inline images that cause them to misreport pixel measurements and positions sometimes has been fixed in master as of Dec, 2023, so scrolling with lots of inline images should be much smoother from v30.
+  - As of June, 2025, another [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604][display bug]] related to line-skipping of visual (i.e. word) wrapped lines with inline images at line start has been fixed (for Emacs v31).  This caused additional "hitches" in smooth scrolling for numerous inline images.
+  - Another display bug which lead to scrolling (and general UI) slowdown in some situations with ~make-cursor-line-fully-visible=t~ was also [[../../issues/32][found]] and [[https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766][fixed]].
 
 ** Speed
 :PROPERTIES:

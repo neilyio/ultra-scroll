@@ -14,7 +14,7 @@ You move your fingers, the page responds, *instantly*:
 Importantly, `ultra-scroll` can cleanly *scroll right across* tall
 images and other jumbo lines – a perennial problem with scrolling
 packages to date. As a bonus, it enables relatively smooth scrolling
-even with dumb third party mice on some systems.
+even with dumb third party mice.
 
 Note, the `previous-buffer` animation above is from two-finger track-pad
 swiping, and is an `emacs-mac` exclusive.
@@ -83,7 +83,7 @@ new `:vc` keyword. Configuration is then simple:
 
 ``` commonlisp
 (use-package ultra-scroll
-  ;:load-path "~/code/emacs/ultra-scroll" ; if you git cloned
+  ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
   ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
   :init
   (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
@@ -359,9 +359,7 @@ across jumbo lines:
       using `set-window-start` (lines of content move down), you must
       keep point on the jumbo, but *only until it clears the top of the
       window area* (even by one pixel).
-    - After this, you must move the point to the line above it (and had
-      better insist that `scroll-conservatively>0` during the scroll to
-      prevent re-centering).
+    - After this, you must move the point to the line above it.
     - In some cases (depending on truncation/visual-line-mode/etc.),
       this movement must occur from a position beyond the first full
       height object (which may not be at the line's start). E.g. one
@@ -370,6 +368,21 @@ across jumbo lines:
   window boundaries. Better to use the first line at the window's top or
   directly identify the final line (both via `pos-at-x-y`) and adjust
   from there.
+- Display bugs
+  - There are
+    [display](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
+    [bugs](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) with
+    inline images that cause them to misreport pixel measurements and
+    positions sometimes.
+  - These lead to slightly staccato scrolling in such buffers and
+    `height=0` gets erroneously reported, so can't be used to find
+    beginning of buffer. Best to guard against these.
+  - **Update:** Two display bugs have been fixed in master as of Dec,
+    2023, so scrolling with lots of inline images will soon be even
+    smoother. [One
+    bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
+    motion skipping visual-wrapped lines with images at line start
+    remains.
 
 So all in all, it's quite complicated to get something that works as
 you'd hope. The cutting room floor is littered with literally dozens of
@@ -378,17 +391,26 @@ are many more corner cases, but the current design gets most things
 right in my usage.
 
 ## Display bugs
-`ultra-scroll` exercises some rare corner cases of Emacs' redisplay logic, and as a result has revealed and helped fix a number of display bugs.  These bugs lead to behaviors like slightly staccato scrolling in buffers with diverse line heights (e.g. inline images).  If you think you have found a display bug, open an issue to discuss.
 
-  - A [display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
-    with inline images that cause them to misreport pixel measurements and
-    positions sometimes has been fixed in master as of Dec,
-    2023, so scrolling with lots of inline images should be much
-    smoother from v30. 
-  - As of June, 2025, another [display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
-    line-skipping of visual (i.e. word) wrapped lines with inline images at line start
-    has been fixed (for Emacs v31).  This caused additional "hitches" in smooth scrolling for numerous inline images.
-  - Another display bug which lead to scrolling (and general UI) slowdown in some situations with `make-cursor-line-fully-visible=t` was also [found](../../issues/32) and [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766).
+`ultra-scroll` exercises some rare corner cases of Emacs' redisplay
+logic, and as a result has revealed and helped fix a number of display
+bugs. These bugs lead to behaviors like slightly staccato scrolling in
+buffers with diverse line heights (e.g. inline images). If you think you
+have found a display bug, open an issue to discuss.
+
+- A [display bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
+  with inline images that cause them to misreport pixel measurements and
+  positions sometimes has been fixed in master as of Dec, 2023, so
+  scrolling with lots of inline images should be much smoother from v30.
+- As of June, 2025, another [display
+  bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
+  line-skipping of visual (i.e. word) wrapped lines with inline images
+  at line start has been fixed (for Emacs v31). This caused additional
+  "hitches" in smooth scrolling for numerous inline images.
+- Another display bug which lead to scrolling (and general UI) slowdown
+  in some situations with `make-cursor-line-fully-visible=t` was also
+  [found](../../issues/32) and
+  [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766).
 
 ## Speed
 
