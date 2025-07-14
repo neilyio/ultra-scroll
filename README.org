@@ -1,4 +1,5 @@
 * ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
+#+html: <a href="https://melpa.org/#/vertico"><img alt="MELPA" src="https://melpa.org/packages/ultra-scroll-badge.svg"/></a>
 
 ~ultra-scroll~[fn:1] is a smooth-scrolling package for emacs, with native support for standard builds as well as [[https://bitbucket.org/mituharu/emacs-mac][emacs-mac]].  It provides highly optimized, pixel-precise smooth scrolling which can readily keep up with the /very/ high event rates of modern track-pads and high-precision wheel mice.
 
@@ -40,18 +41,11 @@ For systems which do /not/ provide normal pixel scroll data, you can try the bui
 
 ** Installation
 
-Not yet in a package archive.  For Emacs 29, use ~package-vc-install~.  In the ~*scratch*~ buffer, enter
-
-#+begin_src emacs-lisp
-  (package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll"))
-#+end_src
-
-move to the final paren, and =C-x C-e=.  For Emacs 30, you can use the new ~:vc~ keyword.  Configuration is then simple:
+~ultra-scroll~ is in MELPA.  Starting from Emacs 30, you can also use the new ~:vc~ keyword to download directly from this repository.  Configuration is then simple:
 
 #+begin_src emacs-lisp
   (use-package ultra-scroll
-    ;:load-path "~/code/emacs/ultra-scroll" ; if you git cloned
-    ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
+    ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; if desired (emacs>=v30)
     :init
     (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
           scroll-margin 0)        ; important: scroll-margin>0 not yet supported

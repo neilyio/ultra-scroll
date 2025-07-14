@@ -2,6 +2,10 @@
 #+author: J.D. Smith
 #+language: en
 
+* v0.4.2 (2025-07-14)
+
+- Released on MELPA.
+
 * 0.4.1 (2025-06-09)
 
 - Work around redisplay bugs when the cursor is partially visible, which can lead to ~redisplay~ slowdowns of 150-500x.

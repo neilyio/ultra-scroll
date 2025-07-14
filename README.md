@@ -1,5 +1,7 @@
 # ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
 
+<a href="https://melpa.org/#/vertico"><img alt="MELPA" src="https://melpa.org/packages/ultra-scroll-badge.svg"/></a>
+
 `ultra-scroll`[^1] is a smooth-scrolling package for emacs, with native
 support for standard builds as well as
 [emacs-mac](https://bitbucket.org/mituharu/emacs-mac). It provides
@@ -71,20 +73,13 @@ interpolation) instead.
 
 ## Installation
 
-Not yet in a package archive. For Emacs 29, use `package-vc-install`. In
-the `*scratch*` buffer, enter
-
-``` commonlisp
-(package-vc-install '(ultra-scroll :vc-backend Git :url  "https://github.com/jdtsmith/ultra-scroll"))
-```
-
-move to the final paren, and `C-x C-e`. For Emacs 30, you can use the
-new `:vc` keyword. Configuration is then simple:
+`ultra-scroll` is in MELPA. Starting from Emacs 30, you can also use the
+new `:vc` keyword to download directly from this repository.
+Configuration is then simple:
 
 ``` commonlisp
 (use-package ultra-scroll
-  ;:load-path "~/code/emacs/ultra-scroll" ; if you git clone'd instead of using vc
-  ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; For Emacs>=30
+  ;:vc (:url "https://github.com/jdtsmith/ultra-scroll") ; if desired (emacs>=v30)
   :init
   (setq scroll-conservatively 3 ; or whatever value you prefer, since v0.4
         scroll-margin 0)        ; important: scroll-margin>0 not yet supported
