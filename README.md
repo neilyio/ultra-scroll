@@ -1,6 +1,6 @@
 # ultra-scroll: scroll emacs like lightning ⚡🖱️⚡
 
-<a href="https://melpa.org/#/vertico"><img alt="MELPA" src="https://melpa.org/packages/ultra-scroll-badge.svg"/></a>
+<a href="https://melpa.org/#/ultra-scroll"><img alt="MELPA" src="https://melpa.org/packages/ultra-scroll-badge.svg"/></a>
 
 `ultra-scroll`[^1] is a smooth-scrolling package for emacs, with native
 support for standard builds as well as
