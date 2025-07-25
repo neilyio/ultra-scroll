@@ -363,21 +363,6 @@ across jumbo lines:
   window boundaries. Better to use the first line at the window's top or
   directly identify the final line (both via `pos-at-x-y`) and adjust
   from there.
-- Display bugs
-  - There are
-    [display](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67533)
-    [bugs](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) with
-    inline images that cause them to misreport pixel measurements and
-    positions sometimes.
-  - These lead to slightly staccato scrolling in such buffers and
-    `height=0` gets erroneously reported, so can't be used to find
-    beginning of buffer. Best to guard against these.
-  - **Update:** Two display bugs have been fixed in master as of Dec,
-    2023, so scrolling with lots of inline images will soon be even
-    smoother. [One
-    bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
-    motion skipping visual-wrapped lines with images at line start
-    remains.
 
 So all in all, it's quite complicated to get something that works as
 you'd hope. The cutting room floor is littered with literally dozens of
@@ -401,11 +386,12 @@ have found a display bug, open an issue to discuss.
   bug](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=67604) related to
   line-skipping of visual (i.e. word) wrapped lines with inline images
   at line start has been fixed (for Emacs v31). This caused additional
-  "hitches" in smooth scrolling for numerous inline images.
-- Another display bug which lead to scrolling (and general UI) slowdown
+  "hitches" in smooth scrolling in buffers with numerous inline images.
+- Another display bug which leads to scrolling (and general UI) slowdown
   in some situations with `make-cursor-line-fully-visible=t` was also
   [found](../../issues/32) and
-  [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766).
+  [fixed](https://debbugs.gnu.org/cgi/bugreport.cgi?bug=78766) in
+  June, 2025. Will be included with Emacs v31.
 
 ## Speed
 
