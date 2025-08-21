@@ -68,6 +68,19 @@ GC percentage is restored only if `ultra-scroll-gc-percentage' is non-nil."
   :group 'scrolling)
 (make-obsolete-variable 'ultra-scroll-gc-idle-time 'ultra-scroll-idle-time "0.4")
 
+(defgroup ultra-scroll-tty nil
+  "TTY integration for ultra-scroll."
+  :group 'scrolling)
+
+(defcustom ultra-scroll-tty-burst-window 0.012
+  "Batch window (seconds) to coalesce TTY wheel events."
+  :type 'number :group 'ultra-scroll-tty)
+
+(defcustom ultra-scroll-tty-lines-per-notch nil
+  "Lines per wheel notch in TTY.  If nil, derive from `mouse-wheel-scroll-amount`."
+  :type '(choice (const :tag "Auto" nil) integer)
+  :group 'ultra-scroll-tty)
+
 (defcustom ultra-scroll-hide-cursor 0.25
   "Hide the cursor during scrolls after it reaches the window bounds.
 Time in sec after which to restore the cursor.  Set to nil to
@@ -97,6 +110,35 @@ directly, toggling them only if they are already active."
 (defvar-local ultra-scroll--hide-cursor-timer nil)
 (defvar-local ultra-scroll--hide-cursor-start nil)
 (defvar-local ultra-scroll--hide-cursor-undo-hook nil)
+
+;;;; TTY wheel event coalescing
+(defvar ultra-scroll--tty-accum 0)   ; pixel accumulator
+(defvar ultra-scroll--tty-win   nil) ; window we're accumulating for
+(defvar ultra-scroll--tty-timer nil) ; timer to flush a burst
+
+(defun ultra-scroll--tty-lines-per-notch ()
+  (or ultra-scroll-tty-lines-per-notch
+      (let ((amt mouse-wheel-scroll-amount))
+        (cond ((integerp amt) amt)
+              ((and (consp amt) (cdr (assq 't amt)))  (cdr (assq 't amt)))
+              ((and (consp amt) (cdr (assq nil amt))) (cdr (assq nil amt)))
+              (t 3)))))
+
+(defun ultra-scroll--tty-dir (event)
+  "Return +1 for up (content moves down), -1 for down (content moves up)."
+  (let ((b (event-basic-type event)))
+    (cond ((memq b '(mouse-4 wheel-up))   +1)
+          ((memq b '(mouse-5 wheel-down)) -1)
+          (t +1))))
+
+(defun ultra-scroll--tty-flush ()
+  (let ((w   ultra-scroll--tty-win)
+        (amt (prog1 ultra-scroll--tty-accum (setq ultra-scroll--tty-accum 0))))
+    (setq ultra-scroll--tty-timer nil)
+    (when (and w (window-live-p w) (not (zerop amt)))
+      (ultra-scroll--prepare-to-scroll)
+      (ultra-scroll--scroll amt w))))
+
 (defun ultra-scroll--hide-cursor-undo (buf)
   "Undo cursor hiding in BUF."
   (when (buffer-live-p buf)
@@ -296,10 +338,31 @@ EVENT and optional ARG are passed to `mwheel-scroll', unless
 EVENT is a scrolling event."
   (interactive "e")
   (let ((delta (nth 4 event)))
-    (if (not delta)
-	(mwheel-scroll event arg)
+    (if delta
+        ;; GUI / real pixel delta: current path
+        (progn
       (ultra-scroll--prepare-to-scroll)
-      (ultra-scroll--scroll (round (cdr delta)) (mwheel-event-window event)))))
+          (ultra-scroll--scroll (round (cdr delta)) (mwheel-event-window event)))
+      ;; --- TTY: no pixel delta. In xterm-mouse-mode, coalesce wheel bursts. ---
+      (if (and (not (display-graphic-p))
+               (bound-and-true-p xterm-mouse-mode)
+               (memq (event-basic-type event) '(mouse-4 mouse-5 wheel-up wheel-down)))
+          (let* ((win   (or (mwheel-event-window event)
+                            (posn-window (event-start event))))
+                 (lines (ultra-scroll--tty-lines-per-notch))
+                 (px    (* (frame-char-height) lines))
+                 ;; ultra-scroll uses positive pixels for UP, negative for DOWN
+                 (signed (* (ultra-scroll--tty-dir event) px)))
+            (unless (eq win ultra-scroll--tty-win)
+              (setq ultra-scroll--tty-win win
+                    ultra-scroll--tty-accum 0))
+            (cl-incf ultra-scroll--tty-accum signed)
+            (unless ultra-scroll--tty-timer
+              (setq ultra-scroll--tty-timer
+                    (run-at-time ultra-scroll-tty-burst-window nil
+                                 #'ultra-scroll--tty-flush))))
+        ;; Fallback: let mwheel handle truly non-scroll events
+        (mwheel-scroll event arg)))))
 
 (declare-function mac-forward-wheel-event "mac-win")
 (defun ultra-scroll-mac (event &optional arg)
