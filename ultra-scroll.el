@@ -68,6 +68,19 @@ GC percentage is restored only if `ultra-scroll-gc-percentage' is non-nil."
   :group 'scrolling)
 (make-obsolete-variable 'ultra-scroll-gc-idle-time 'ultra-scroll-idle-time "0.4")
 
+(defgroup ultra-scroll-tty nil
+  "TTY integration for ultra-scroll."
+  :group 'scrolling)
+
+(defcustom ultra-scroll-tty-burst-window 0.012
+  "Batch window (seconds) to coalesce TTY wheel events."
+  :type 'number :group 'ultra-scroll-tty)
+
+(defcustom ultra-scroll-tty-lines-per-notch nil
+  "Lines per wheel notch in TTY.  If nil, derive from `mouse-wheel-scroll-amount`."
+  :type '(choice (const :tag "Auto" nil) integer)
+  :group 'ultra-scroll-tty)
+
 (defcustom ultra-scroll-hide-cursor 0.25
   "Hide the cursor during scrolls after it reaches the window bounds.
 Time in sec after which to restore the cursor.  Set to nil to
@@ -97,6 +110,34 @@ directly, toggling them only if they are already active."
 (defvar-local ultra-scroll--hide-cursor-timer nil)
 (defvar-local ultra-scroll--hide-cursor-start nil)
 (defvar-local ultra-scroll--hide-cursor-undo-hook nil)
+
+;;;; TTY wheel event coalescing
+(defvar ultra-scroll--tty-accum 0)   ; pixel accumulator
+(defvar ultra-scroll--tty-win   nil) ; window we're accumulating for
+(defvar ultra-scroll--tty-timer nil) ; timer to flush a burst
+
+(defun ultra-scroll--tty-lines-per-notch ()
+  (or ultra-scroll-tty-lines-per-notch
+      (let ((amt mouse-wheel-scroll-amount))
+        (cond ((integerp amt) amt)
+              ((and (consp amt) (cdr (assq 't amt)))  (cdr (assq 't amt)))
+              ((and (consp amt) (cdr (assq nil amt))) (cdr (assq nil amt)))
+              (t 3)))))
+
+(defun ultra-scroll--tty-dir (event)
+  "Return +1 for up (content moves down), -1 for down (content moves up)."
+  (let ((b (event-basic-type event)))
+    (cond ((memq b '(mouse-4 wheel-up))   +1)
+          ((memq b '(mouse-5 wheel-down)) -1)
+          (t +1))))
+
+(defun ultra-scroll--tty-flush ()
+  (let ((w   ultra-scroll--tty-win)
+        (amt (prog1 ultra-scroll--tty-accum (setq ultra-scroll--tty-accum 0))))
+    (setq ultra-scroll--tty-timer nil)
+    (when (and w (window-live-p w) (not (zerop amt)))
+      (ultra-scroll--prepare-to-scroll)
+      (ultra-scroll--scroll amt w))))
 (defun ultra-scroll--hide-cursor-undo (buf)
   "Undo cursor hiding in BUF."
   (when (buffer-live-p buf)
@@ -117,31 +158,31 @@ directly, toggling them only if they are already active."
   "Hide cursor in WINDOW."
   (when ultra-scroll-hide-cursor
     (if ultra-scroll--hide-cursor-timer
-	(timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
-			(timer-relative-time nil ultra-scroll-hide-cursor))
+	    (timer-set-time ultra-scroll--hide-cursor-timer ; reschedule
+			            (timer-relative-time nil ultra-scroll-hide-cursor))
       (setq ultra-scroll--hide-cursor-start (window-point window)
             ultra-scroll--hide-cursor-timer
-	    (run-at-time ultra-scroll-hide-cursor nil
-			 #'ultra-scroll--hide-cursor-undo
-			 (window-buffer window))))
+	        (run-at-time ultra-scroll-hide-cursor nil
+			             #'ultra-scroll--hide-cursor-undo
+			             (window-buffer window))))
     (unless (or ultra-scroll--hide-cursor-undo-hook ; already hiding
-		(eq (window-point window) ; not yet at window edge
-		    ultra-scroll--hide-cursor-start))
+		        (eq (window-point window) ; not yet at window edge
+		            ultra-scroll--hide-cursor-start))
       (push (if (local-variable-p 'cursor-type)
                 (let ((orig cursor-type))
                   (lambda (_v) (setq-local cursor-type orig)))
-	      (lambda (_v) (kill-local-variable 'cursor-type)))
+	          (lambda (_v) (kill-local-variable 'cursor-type)))
             ultra-scroll--hide-cursor-undo-hook)
       (setq-local cursor-type nil)
       (run-hook-wrapped
        'ultra-scroll-hide-functions
        (lambda (fun)
-	 (when (or (not (symbolp fun))
-		   (not (string-suffix-p "-mode" (symbol-name fun)))
-		   (and (boundp fun) (symbol-value fun)))
-	   (push fun ultra-scroll--hide-cursor-undo-hook)
-	   (funcall fun -1)) 		; disable
-	 nil)))))
+	     (when (or (not (symbolp fun))
+		           (not (string-suffix-p "-mode" (symbol-name fun)))
+		           (and (boundp fun) (symbol-value fun)))
+	       (push fun ultra-scroll--hide-cursor-undo-hook)
+	       (funcall fun -1)) 		; disable
+	     nil)))))
 
 ;;;; Other scroll begin/end actions
 (defvar ultra-scroll--gc-percentage-orig nil)
@@ -165,82 +206,82 @@ and the `gc-cons-percentage' level to set temporarily."
       (set-window-vscroll w 0))
     (let (changed)
       (when ultra-scroll-gc-percentage
-	(setq changed t
-	      gc-cons-percentage	; reduce GC's during scroll
-	      (max gc-cons-percentage ultra-scroll-gc-percentage)))
+	    (setq changed t
+	          gc-cons-percentage	; reduce GC's during scroll
+	          (max gc-cons-percentage ultra-scroll-gc-percentage)))
       (when (< scroll-conservatively 100)
-	(setq changed t
-	      ultra-scroll--scroll-conservatively-orig scroll-conservatively
-	      scroll-conservatively 101))
+	    (setq changed t
+	          ultra-scroll--scroll-conservatively-orig scroll-conservatively
+	          scroll-conservatively 101))
       (when changed
-	(setq ultra-scroll--timer
-	      (run-with-idle-timer ultra-scroll-idle-time nil
-				   #'ultra-scroll--end-scroll))))))
+	    (setq ultra-scroll--timer
+	          (run-with-idle-timer ultra-scroll-idle-time nil
+				                   #'ultra-scroll--end-scroll))))))
 
 ;;;; Scroll
 (defun ultra-scroll-down (delta)
   "Scroll the current window down by DELTA pixels.
 DELTA should not be larger than the height of the current window."
   (let* ((initial (point))
-	 (edges (window-edges nil t nil t))
-	 (win-height (- (nth 3 edges) (nth 1 edges)))
-	 (current-vs (window-vscroll nil t))
-	 (off (+ (window-tab-line-height) (window-header-line-height)))
+	     (edges (window-edges nil t nil t))
+	     (win-height (- (nth 3 edges) (nth 1 edges)))
+	     (current-vs (window-vscroll nil t))
+	     (off (+ (window-tab-line-height) (window-header-line-height)))
          (new-start (posn-point (posn-at-x-y 0 (+ delta off))))
-	 (new-start-posn (and new-start (posn-at-point new-start))))
+	     (new-start-posn (and new-start (posn-at-point new-start))))
     (unless new-start-posn ; scroll delta could be larger than win height!
       (let ((last-start (or new-start 0)) quit)
-	(while (and (> delta (- win-height off)) (not quit))
-	  (setq new-start (posn-point (posn-at-x-y 0 (1- win-height))))
-	  (if (<= new-start last-start)
-	      (setq quit t)		; no progress being made
-	    (setq new-start-posn (posn-at-point new-start)
-		  last-start new-start
-		  delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
-	    (set-window-start nil new-start)))))
+	    (while (and (> delta (- win-height off)) (not quit))
+	      (setq new-start (posn-point (posn-at-x-y 0 (1- win-height))))
+	      (if (<= new-start last-start)
+	          (setq quit t)		; no progress being made
+	        (setq new-start-posn (posn-at-point new-start)
+		          last-start new-start
+		          delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
+	        (set-window-start nil new-start)))))
     (when new-start
       (goto-char new-start)
       (unless (zerop (window-hscroll))
-	(setq new-start (beginning-of-visual-line)))
+	    (setq new-start (beginning-of-visual-line)))
       (if (>= (line-pixel-height) win-height)
-	  ;; Jumbo line at top: just stay on it and increment vscroll
-	  (set-window-vscroll nil (+ current-vs delta) t t)
-	(if (eq new-start (window-start)) ; same start: just vscroll a bit more
-	    (setq delta (+ current-vs delta))
-	  (setq new-start-posn (posn-at-point new-start)
-		delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
-	  (set-window-start nil new-start (not (zerop delta))))
-	(set-window-vscroll nil delta t t)
-	;; Avoid recentering
-	(goto-char (posn-point (posn-at-x-y 0 off))) ; window-start may be above
-	(if (zerop (vertical-motion 1))	; move down 1 line from top
-	    (signal 'end-of-buffer nil))
-	(if (> initial (point)) (goto-char initial))))))
+	      ;; Jumbo line at top: just stay on it and increment vscroll
+	      (set-window-vscroll nil (+ current-vs delta) t t)
+	    (if (eq new-start (window-start)) ; same start: just vscroll a bit more
+	        (setq delta (+ current-vs delta))
+	      (setq new-start-posn (posn-at-point new-start)
+		        delta (- delta (or (cdr (posn-x-y new-start-posn)) 0)))
+	      (set-window-start nil new-start (not (zerop delta))))
+	    (set-window-vscroll nil delta t t)
+	    ;; Avoid recentering
+	    (goto-char (posn-point (posn-at-x-y 0 off))) ; window-start may be above
+	    (if (zerop (vertical-motion 1))	; move down 1 line from top
+	        (signal 'end-of-buffer nil))
+	    (if (> initial (point)) (goto-char initial))))))
 
 (defun ultra-scroll-up (delta)
   "Scroll the current window up by DELTA pixels.
 DELTA should be less than the window's height."
   (let* ((initial (point))
-	 (edges (window-edges nil t nil t))
-	 (win-height (- (nth 3 edges) (nth 1 edges)))
-	 (win-start (window-start))
-	 (current-vs (window-vscroll nil t))
-	 (start win-start))
+	     (edges (window-edges nil t nil t))
+	     (win-height (- (nth 3 edges) (nth 1 edges)))
+	     (win-start (window-start))
+	     (current-vs (window-vscroll nil t))
+	     (start win-start))
     (if (<= delta current-vs)	    ; simple case: just reduce vscroll
-	(setq delta (- current-vs delta))
-      ; Not enough vscroll: measure size above window-start
+	    (setq delta (- current-vs delta))
+                                        ; Not enough vscroll: measure size above window-start
       (let* ((dims (window-text-pixel-size nil (cons start (- current-vs delta))
-					   start nil nil nil t))
-	     (pos (nth 2 dims))
-	     (height (nth 1 dims)))
-	(when (or (not pos) (eq pos (point-min)))
-	  (signal 'beginning-of-buffer nil))
-	(setq start (nth 2 dims)
-	      delta (- (+ height current-vs) delta))) ; should be >= 0
+					                       start nil nil nil t))
+	         (pos (nth 2 dims))
+	         (height (nth 1 dims)))
+	    (when (or (not pos) (eq pos (point-min)))
+	      (signal 'beginning-of-buffer nil))
+	    (setq start (nth 2 dims)
+	          delta (- (+ height current-vs) delta))) ; should be >= 0
       (unless (eq start win-start)
-	(set-window-start nil start (not (zerop delta)))))
+	    (set-window-start nil start (not (zerop delta)))))
     (when (>= delta 0) (set-window-vscroll nil delta t t))
-    
+
     ;; Position point to avoid recentering, moving up one line from
     ;; the bottom, if necessary.  "Jumbo" lines (taller than the
     ;; window height, usually due to images) must be handled
@@ -250,44 +291,44 @@ DELTA should be less than the window's height."
     ;; (above), via the full height character.  This is the only way to
     ;; avoid unwanted re-centering/motion trapping.
     (if (> (line-pixel-height) win-height) ; a jumbo on the line!
-	(let ((end (max (point)
-			(save-excursion
-			  (end-of-visual-line)
-			  (1- (point)))))) ; don't fall off
-	  (when-let* ((pv (pos-visible-in-window-p end nil t))
-		     ((and (> (length pv) 2) ; falls outside window
-			   (zerop (nth 2 pv))))) ; but not at the top
-	    (goto-char end) ; eol is usually full height
-	    (goto-char start))) ; now move up
+	    (let ((end (max (point)
+			            (save-excursion
+			              (end-of-visual-line)
+			              (1- (point)))))) ; don't fall off
+	      (when-let* ((pv (pos-visible-in-window-p end nil t))
+		              ((and (> (length pv) 2) ; falls outside window
+			                (zerop (nth 2 pv))))) ; but not at the top
+	        (goto-char end) ; eol is usually full height
+	        (goto-char start))) ; now move up
       (when-let* ((p (posn-at-x-y 0 (1- win-height))))
-	(goto-char (posn-point p))
-	(vertical-motion -1)
-	(if (< initial (point)) (goto-char initial))))))
+	    (goto-char (posn-point p))
+	    (vertical-motion -1)
+	    (if (< initial (point)) (goto-char initial))))))
 
 (defsubst ultra-scroll--scroll (delta window)
   "Scroll WINDOW by DELTA pixels (positive or negative)."
   (let (ignore)
     (unless (or (zerop delta)
-		(and (setq ignore (window-parameter window 'ultra-scroll--ignore))
-		     (or (and (eq (point) (car ignore)) ; ignoring this window this direction
-			      (eq (cdr ignore) (< delta 0)))
-			 (set-window-parameter window 'ultra-scroll--ignore nil))))
+		        (and (setq ignore (window-parameter window 'ultra-scroll--ignore))
+		             (or (and (eq (point) (car ignore)) ; ignoring this window this direction
+			                  (eq (cdr ignore) (< delta 0)))
+			             (set-window-parameter window 'ultra-scroll--ignore nil))))
       (with-selected-window window
-	(condition-case err
-	    (if (< delta 0)
-		(ultra-scroll-down (- delta))
-	      (ultra-scroll-up delta))
-	  ;; Do not ding at buffer limits.  Show a message instead (once!).
-	  ((beginning-of-buffer end-of-buffer)
-	   (let* ((end (eq (car err) 'end-of-buffer))
-		  (p (if end (point-max) (point-min))))
-	     (when ultra-scroll--hide-cursor-undo-hook (goto-char p))
-	     (set-window-start window p)
-	     (set-window-vscroll window 0 t t)
-	     (set-window-parameter window 'ultra-scroll--ignore
-				   (cons (point) end))
-	     (message (error-message-string
-		       (if end '(end-of-buffer) '(beginning-of-buffer)))))))
+	    (condition-case err
+	        (if (< delta 0)
+		        (ultra-scroll-down (- delta))
+	          (ultra-scroll-up delta))
+	      ;; Do not ding at buffer limits.  Show a message instead (once!).
+	      ((beginning-of-buffer end-of-buffer)
+	       (let* ((end (eq (car err) 'end-of-buffer))
+		          (p (if end (point-max) (point-min))))
+	         (when ultra-scroll--hide-cursor-undo-hook (goto-char p))
+	         (set-window-start window p)
+	         (set-window-vscroll window 0 t t)
+	         (set-window-parameter window 'ultra-scroll--ignore
+				                   (cons (point) end))
+	         (message (error-message-string
+		               (if end '(end-of-buffer) '(beginning-of-buffer)))))))
         (ultra-scroll--hide-cursor window)))))
 
 (defun ultra-scroll (event &optional arg)
@@ -296,10 +337,31 @@ EVENT and optional ARG are passed to `mwheel-scroll', unless
 EVENT is a scrolling event."
   (interactive "e")
   (let ((delta (nth 4 event)))
-    (if (not delta)
-	(mwheel-scroll event arg)
-      (ultra-scroll--prepare-to-scroll)
-      (ultra-scroll--scroll (round (cdr delta)) (mwheel-event-window event)))))
+    (if delta
+        ;; GUI / real pixel delta: current path
+        (progn
+          (ultra-scroll--prepare-to-scroll)
+          (ultra-scroll--scroll (round (cdr delta)) (mwheel-event-window event)))
+      ;; --- TTY: no pixel delta. In xterm-mouse-mode, coalesce wheel bursts. ---
+      (if (and (not (display-graphic-p))
+               (bound-and-true-p xterm-mouse-mode)
+               (memq (event-basic-type event) '(mouse-4 mouse-5 wheel-up wheel-down)))
+          (let* ((win   (or (mwheel-event-window event)
+                            (posn-window (event-start event))))
+                 (lines (ultra-scroll--tty-lines-per-notch))
+                 (px    (* (frame-char-height) lines))
+                 ;; ultra-scroll uses positive pixels for UP, negative for DOWN
+                 (signed (* (ultra-scroll--tty-dir event) px)))
+            (unless (eq win ultra-scroll--tty-win)
+              (setq ultra-scroll--tty-win win
+                    ultra-scroll--tty-accum 0))
+            (cl-incf ultra-scroll--tty-accum signed)
+            (unless ultra-scroll--tty-timer
+              (setq ultra-scroll--tty-timer
+                    (run-at-time ultra-scroll-tty-burst-window nil
+                                 #'ultra-scroll--tty-flush))))
+        ;; Fallback: let mwheel handle truly non-scroll events
+        (mwheel-scroll event arg)))))
 
 (declare-function mac-forward-wheel-event "mac-win")
 (defun ultra-scroll-mac (event &optional arg)
@@ -310,24 +372,24 @@ swipe-between-pages at the OS level, left-/right-swipe events
 will be replayed for left/right touch ends."
   (interactive "e")
   (let ((ev-type (event-basic-type event))
-	(plist (nth 3 event)))
+	    (plist (nth 3 event)))
     (if (not (memq ev-type '(wheel-up wheel-down)))
-	(when (memq ev-type '(wheel-left wheel-right))
-	  (if mouse-wheel-tilt-scroll
-	      (mac-forward-wheel-event t 'mwheel-scroll event arg)
-	    (when (and ;; "Swipe between pages" enabled.
-		   (plist-get plist :swipe-tracking-from-scroll-events-enabled-p)
-		   (eq (plist-get plist :momentum-phase) 'began))
-	      ;; Post a swipe event when left/right momentum phase begins
-	      (push (cons (event-convert-list
-			   (nconc (delq 'click
-					(delq 'double
-					      (delq 'triple
-						    (event-modifiers event))))
-				  (if (eq (event-basic-type event) 'wheel-left)
-				      '(swipe-left) '(swipe-right))))
-			  (cdr event))
-		    unread-command-events))))
+	    (when (memq ev-type '(wheel-left wheel-right))
+	      (if mouse-wheel-tilt-scroll
+	          (mac-forward-wheel-event t 'mwheel-scroll event arg)
+	        (when (and ;; "Swipe between pages" enabled.
+		           (plist-get plist :swipe-tracking-from-scroll-events-enabled-p)
+		           (eq (plist-get plist :momentum-phase) 'began))
+	          ;; Post a swipe event when left/right momentum phase begins
+	          (push (cons (event-convert-list
+			               (nconc (delq 'click
+					                    (delq 'double
+					                          (delq 'triple
+						                            (event-modifiers event))))
+				                  (if (eq (event-basic-type event) 'wheel-left)
+				                      '(swipe-left) '(swipe-right))))
+			              (cdr event))
+		            unread-command-events))))
       ;;  Note: emacs-mac encodes all scrolling information in the PLIST, as follows:
       ;;    trackpads:
       ;;      - `:scrolling-delta-x' and `:scrolling-delta-y' are set
@@ -342,13 +404,13 @@ will be replayed for left/right touch ends."
       ;;      - `:momentum-phase' is always `none'.
       (ultra-scroll--prepare-to-scroll)
       (let* ((scroll-delta (plist-get plist :scrolling-delta-y))
-	     (delta (or scroll-delta
-			;; regular non-touch scroll: fraction of a line
-			(* (plist-get plist :delta-y) (frame-char-height)
-			   ultra-scroll-mac-multiplier))))
-	(ultra-scroll--scroll (round delta) (mwheel-event-window event))))))
+	         (delta (or scroll-delta
+			            ;; regular non-touch scroll: fraction of a line
+			            (* (plist-get plist :delta-y) (frame-char-height)
+			               ultra-scroll-mac-multiplier))))
+	    (ultra-scroll--scroll (round delta) (mwheel-event-window event))))))
 
-; scroll-isearch support
+                                        ; scroll-isearch support
 (put 'ultra-scroll 'scroll-command t)
 (put 'ultra-scroll-mac 'scroll-command t)
 
@@ -364,50 +426,50 @@ their PIXEL-DELTA values to see if they differ."
        (inhibit-read-only t)
        (max-cnt (max event-cnt 30)) (cnt 1) deltas mac-basic ev tm)
     (message (concat "ultra-scroll: checking scroll data\n"
-		     (format
-		      "Scroll your mouse wheel or track-pad slow then fast to generate %d events"
-		      max-cnt)))
+		             (format
+		              "Scroll your mouse wheel or track-pad slow then fast to generate %d events"
+		              max-cnt)))
     (while (and (setq ev (read-event)) (< cnt max-cnt))
       (when (memq (event-basic-type ev) '(wheel-up wheel-down))
-	(unless tm (setq tm (current-time)))
-	(message "Detected %2d/%2d wheel event%s" cnt max-cnt (if (> cnt 1) "s" ""))
-	(cl-incf cnt)
-	(if (featurep 'mac-win)
-	    (let ((plist (nth 3 ev)))
-	      (when (null plist)
-		(error "Malformed wheel event detected! %s" ev))
-	      (if-let* ((sdy (plist-get plist :scrolling-delta-y)))
-		  (push sdy deltas)
-		(if-let* ((dy (plist-get plist :delta-y)))
-		    (progn
-		      (push dy deltas)
-		      (setq mac-basic t))
-		  (error "Malformed wheel event detected!  %s" ev))))
-	  (if-let* ((pix-delta (nth 4 ev)))
-	      (push (cdr pix-delta) deltas)
-	    (error "Malformed wheel event detected!  %s" ev)))))
+	    (unless tm (setq tm (current-time)))
+	    (message "Detected %2d/%2d wheel event%s" cnt max-cnt (if (> cnt 1) "s" ""))
+	    (cl-incf cnt)
+	    (if (featurep 'mac-win)
+	        (let ((plist (nth 3 ev)))
+	          (when (null plist)
+		        (error "Malformed wheel event detected! %s" ev))
+	          (if-let* ((sdy (plist-get plist :scrolling-delta-y)))
+		          (push sdy deltas)
+		        (if-let* ((dy (plist-get plist :delta-y)))
+		            (progn
+		              (push dy deltas)
+		              (setq mac-basic t))
+		          (error "Malformed wheel event detected!  %s" ev))))
+	      (if-let* ((pix-delta (nth 4 ev)))
+	          (push (cdr pix-delta) deltas)
+	        (error "Malformed wheel event detected!  %s" ev)))))
     (setq tm (float-time (time-since tm)))
     (with-current-buffer buf
       (erase-buffer)
       (help-mode)
       (insert "  == ultra-scroll Scroll Event Report ==\n\n")
       (insert "* " (emacs-version) "\n* " (if nc "" "No ") "Native Comp Detected"
-	      (if nc "\n" " (use native-comp for fastest scrolling performance)\n")
-	      "\n")
+	          (if nc "\n" " (use native-comp for fastest scrolling performance)\n")
+	          "\n")
       (when (and (featurep 'x) (not (featurep 'xinput2)))
-	(insert " *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
+	    (insert " *** WARNING: Emacs on Linux/X11 must be compiled --with-xinput2\n"))
       (insert (format " ** %s scroll events%s detected in %0.2fs (%0.1f events/s)\n" cnt
-		      (if mac-basic " [Mac basic mouse]" "") tm (/ (float cnt) tm)))
+		              (if mac-basic " [Mac basic mouse]" "") tm (/ (float cnt) tm)))
       (if (cl-every (lambda (x) (= (abs x) (abs (car deltas)))) deltas)
-	  (insert (format " *** WARNING, all pixel scroll values == %0.2f " (car deltas))
-		  "No real pixel scroll data stream?\n"
-		  " ** (try again, or use pixel-scroll-precision instead)\n")
-	(let* ((deltas (mapcar #'abs deltas))
-	       (mean (/ (cl-reduce #'+ deltas ) max-cnt))
-	       (min (apply #'min deltas))
-	       (max (apply #'max deltas)))
-	  (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
-			  (if mac-basic "Mac line-based" "Normal") min max mean)))))
+	      (insert (format " *** WARNING, all pixel scroll values == %0.2f " (car deltas))
+		          "No real pixel scroll data stream?\n"
+		          " ** (try again, or use pixel-scroll-precision instead)\n")
+	    (let* ((deltas (mapcar #'abs deltas))
+	           (mean (/ (cl-reduce #'+ deltas ) max-cnt))
+	           (min (apply #'min deltas))
+	           (max (apply #'max deltas)))
+	      (insert (format " *** %s pixel scroll data: %0.1f to %0.1f (%0.2f mean)\n"
+			              (if mac-basic "Mac line-based" "Normal") min max mean)))))
     (display-buffer buf)))
 
 ;;;; Mode
@@ -436,21 +498,20 @@ your system and hardware provide."
     (when (and (featurep 'x) (not (featurep 'xinput2)))
       (warn "ultra-scroll: Emacs on Linux/X11 must be compiled --with-xinput2"))
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision]
-		(if (featurep 'mac-win) #'ultra-scroll-mac #'ultra-scroll))
+		        (if (featurep 'mac-win) #'ultra-scroll-mac #'ultra-scroll))
     (setf (get 'pixel-scroll-precision-use-momentum 'us-orig-value)
-	  pixel-scroll-precision-use-momentum)
+	      pixel-scroll-precision-use-momentum)
     (setq pixel-scroll-precision-use-momentum nil)
     ;; pixel-scroll-precision after emacs v30 turns this off.  We
     ;; don't need to do so for scrolling, but a bug in half-visible
     ;; cursors lead to 150-400x slowdown in redisplay; see #32.
     (setq-default make-cursor-line-fully-visible nil)
     (setq ultra-scroll--gc-percentage-orig gc-cons-percentage
-	  ultra-scroll--scroll-conservatively-orig scroll-conservatively))
+	      ultra-scroll--scroll-conservatively-orig scroll-conservatively))
    (t
     (define-key pixel-scroll-precision-mode-map [remap pixel-scroll-precision] nil)
     (setq pixel-scroll-precision-use-momentum
-	  (get 'pixel-scroll-precision-use-momentum 'us-orig-value)))))
+	      (get 'pixel-scroll-precision-use-momentum 'us-orig-value)))))
 
 (provide 'ultra-scroll)
 ;;; ultra-scroll.el ends here
-
